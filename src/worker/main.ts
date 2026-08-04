@@ -94,6 +94,8 @@ async function main(): Promise<void> {
   });
 
   const watchers: MailboxWatcher[] = [];
+  /** 每个邮箱最近一次落库的连接状态，用于跳过重复写入。 */
+  const lastState = new Map<string, string>();
   let shuttingDown = false;
 
   for (const mailbox of env.HME_IMAP_MAILBOXES) {
@@ -152,6 +154,12 @@ async function main(): Promise<void> {
         },
 
         onStateChange(state, detail) {
+          // 只在状态真的变了才落库。
+          // 轮询每 3 秒会走一遍 syncing→idling，无脑写的话两个邮箱
+          // 每天要产生 5 万多次无意义的 UPDATE，把 WAL 撑大、也让
+          // web 容器的读被反复打断。出错状态例外：detail 每次都可能不同。
+          if (state === lastState.get(mailbox) && state !== 'error') return;
+          lastState.set(mailbox, state);
           withWriteTx(db, (tx) => syncRepo.setState(tx, account.id, mailbox, state, detail));
         },
 
