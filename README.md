@@ -59,7 +59,7 @@ npm run dev                      # 另开一个终端跑 Web
 ## 部署
 
 ```bash
-docker compose -f docker/compose.yaml up -d --build
+docker compose up -d --build
 ```
 
 三个容器共用一个镜像：`migrate` 先跑完建表，`web` 与 `worker` 才启动。
