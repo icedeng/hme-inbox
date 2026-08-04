@@ -55,8 +55,9 @@ export async function runCleanup(db: Db, options: CleanupOptions): Promise<Clean
 
   // ── 过期邮件 ────────────────────────────────────────────────
   for (;;) {
-    // 先取路径（此时行还在），删行时 CASCADE 会带走 attachments 记录
-    const paths = withWriteTx(db, (tx) => {
+    const batch = withWriteTx(db, (tx) => {
+      // 先取路径（此时行还在）。删行时 CASCADE 会带走 attachments 记录，
+      // 但磁盘文件不会自动删，所以必须在删之前把路径拿出来。
       const filePaths = attachmentsRepo.filePathsForExpiredMessages(tx, now, BATCH_SIZE);
       // SQLite 的 DELETE ... LIMIT 需要编译选项支持，内置版通常没开，用子查询
       const deleted = tx.run(
@@ -66,20 +67,18 @@ export async function runCleanup(db: Db, options: CleanupOptions): Promise<Clean
         now,
         BATCH_SIZE,
       ).changes;
-      result.messagesDeleted += deleted;
-      return deleted > 0 ? filePaths : [];
+      return { deleted, filePaths: deleted > 0 ? filePaths : [] };
     });
 
-    for (const path of paths) {
-      if (options.attachmentStore.remove(path)) result.attachmentFilesDeleted++;
+    result.messagesDeleted += batch.deleted;
+    for (const filePath of batch.filePaths) {
+      if (options.attachmentStore.remove(filePath)) result.attachmentFilesDeleted++;
     }
-    if (paths.length === 0 && result.messagesDeleted % BATCH_SIZE !== 0) break;
 
-    const more = db.get<{ n: number }>(
-      'SELECT COUNT(*) AS n FROM (SELECT 1 FROM messages WHERE expires_at < ? LIMIT 1)',
-      now,
-    );
-    if ((more?.n ?? 0) === 0) break;
+    // 删够一整批说明可能还有，继续；不足一批就是删完了。
+    // 以「本轮实际删除数」为准而不是再查一次，既少一次查询，
+    // 也保证 deleted === 0 时必定退出，不会死循环。
+    if (batch.deleted < BATCH_SIZE) break;
     await sleep(BATCH_PAUSE_MS);
   }
 

@@ -6,8 +6,10 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    // preserve 隐含 bundler 解析。next 包没有 exports 字段，
+    // nodenext 解析取不到它的类型；而 Node 运行时只看导入语句里的
+    // .ts 扩展名，不受 moduleResolution 影响，所以两条工具链都成立。
+    "module": "preserve",
     "types": [
       "node"
     ],

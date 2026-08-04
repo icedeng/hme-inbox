@@ -9,7 +9,15 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Db, withWriteTx, isoNow } from './driver.ts';
 
-const MIGRATIONS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), 'migrations');
+/**
+ * 迁移目录。
+ *
+ * worker 与 migrate 在容器里是 esbuild 打包成的单文件，`import.meta.url`
+ * 指向 dist/ 而不是源码树，所以 .sql 找不到。Dockerfile 会把 migrations
+ * 拷到镜像里并设置 MIGRATIONS_DIR，本地开发时则走相对源码的默认路径。
+ */
+const MIGRATIONS_DIR =
+  process.env.MIGRATIONS_DIR ?? resolve(dirname(fileURLToPath(import.meta.url)), 'migrations');
 
 export interface Migration {
   version: number;

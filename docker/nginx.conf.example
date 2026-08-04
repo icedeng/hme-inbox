@@ -1,0 +1,71 @@
+# 反向代理配置示例（nginx）。
+#
+# 把根路径重写到内部的 /m/*，对外就是你要的形态：
+#   https://api.example.com/{token}/{email}
+#
+# 最要紧的一条是**日志里必须屏蔽路径** —— token 就在 path 里，
+# 默认的 access log 格式会把它原样记下来，日志文件的泄露面
+# 就等同于全部取件凭证的泄露面。
+
+# 自定义日志格式：用 $uri 而不是 $request / $request_uri。
+# $uri 是重写后的路径，仍含 token，所以这里直接写死一个占位串。
+log_format hme_safe '$remote_addr - [$time_local] "$request_method [路径已屏蔽] $server_protocol" '
+                    '$status $body_bytes_sent "$http_referer" "$http_user_agent"';
+
+upstream hme_web {
+    server 127.0.0.1:3000;
+    keepalive 16;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/api.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.example.com/privkey.pem;
+
+    access_log /var/log/nginx/hme.access.log hme_safe;
+
+    # 取件长轮询最多等 30 秒，代理超时必须留出余量
+    proxy_read_timeout 90s;
+    proxy_send_timeout 90s;
+
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Connection        "";
+
+    # 健康检查与内部路径直通
+    location = /api/health {
+        proxy_pass http://hme_web;
+    }
+
+    # 管理后台。强烈建议再加一层 IP 白名单。
+    location /admin {
+        # allow 203.0.113.0/24;
+        # deny all;
+        proxy_pass http://hme_web;
+    }
+
+    location /login {
+        proxy_pass http://hme_web;
+    }
+
+    location /_next/ {
+        proxy_pass http://hme_web;
+    }
+
+    # 其余全部当作取件地址：/{token}/{email}[/...] → /m/{token}/{email}[/...]
+    location / {
+        rewrite ^/(.*)$ /m/$1 break;
+        proxy_pass http://hme_web;
+    }
+}
+
+server {
+    listen 80;
+    server_name api.example.com;
+    return 301 https://$host$request_uri;
+}

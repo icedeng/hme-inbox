@@ -1,0 +1,101 @@
+# 用法：
+#   cp ../.env.example ../.env && 填好各项
+#   docker compose -f docker/compose.yaml up -d --build
+#
+# 三个服务共用一个镜像。migrate 先跑完，web 与 worker 才启动 ——
+# 否则两个容器会同时建表，这是共享 SQLite 时最常见的启动故障。
+
+name: hme-inbox
+
+x-common: &common
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+  environment: &common-env
+    TZ: UTC
+    NODE_ENV: production
+    DATABASE_PATH: /data/db/hme.db
+    ATTACHMENT_DIR: /data/attachments
+    MIGRATIONS_DIR: /app/dist/migrations
+    TOKEN_ENC_KEY: ${TOKEN_ENC_KEY:?必须设置，用 openssl rand -base64 32 生成}
+    RETENTION_DAYS: ${RETENTION_DAYS:-30}
+    UNMATCHED_RETENTION_DAYS: ${UNMATCHED_RETENTION_DAYS:-60}
+  volumes:
+    # 必须挂目录不挂单文件：WAL 需要在同目录创建 -wal 与 -shm。
+    # 必须用 named volume：NFS / CIFS / Docker Desktop for Mac 的
+    # bind mount 上 fcntl 锁不可靠，会导致静默数据损坏。
+    - hme-data:/data
+
+services:
+  migrate:
+    <<: *common
+    command: ['node', 'dist/scripts/migrate.js']
+    restart: 'no'
+
+  web:
+    <<: *common
+    command: ['node', 'server.js']
+    environment:
+      <<: *common-env
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:?必须设置，用 npm run hash-password 生成}
+      SESSION_SECRET: ${SESSION_SECRET:?必须设置，用 openssl rand -base64 32 生成}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?必须设置，例如 https://api.example.com}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-72}
+    ports:
+      # 只绑回环，公网入口交给前置反向代理（它同时负责 TLS 与路径重写）
+      - '127.0.0.1:${WEB_PORT:-3000}:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    <<: *common
+    command: ['node', 'dist/worker/main.js']
+    environment:
+      <<: *common-env
+      HME_IMAP_HOST: ${HME_IMAP_HOST:-imap.mail.me.com}
+      HME_IMAP_PORT: ${HME_IMAP_PORT:-993}
+      HME_IMAP_USER: ${HME_IMAP_USER:?必须设置}
+      # App 专用密码，在 appleid.apple.com 生成。
+      # 注意：改 Apple ID 主密码会一次性吊销全部 App 专用密码。
+      HME_IMAP_PASS: ${HME_IMAP_PASS:?必须设置}
+      # 验证码邮件常被判为垃圾，只盯 INBOX 会静默漏信。
+      # 每多一个邮箱就多一条 IMAP 连接。
+      HME_IMAP_MAILBOXES: ${HME_IMAP_MAILBOXES:-INBOX,Junk}
+      HME_SYNC_SINCE: ${HME_SYNC_SINCE:-}
+      POLL_INTERVAL_MS: ${POLL_INTERVAL_MS:-60000}
+      IDLE_REFRESH_MS: ${IDLE_REFRESH_MS:-1500000}
+      MAX_MESSAGE_BYTES: ${MAX_MESSAGE_BYTES:-5242880}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # 读数据库里的心跳时间戳。worker 不为健康检查单开端口。
+      test: ['CMD', 'node', 'dist/worker/healthcheck.js']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # 解析大附件时会吃内存；限制住，避免拖垮同宿主的 web。
+    # 入库有幂等键，OOM 重启不会重复入库。
+    mem_limit: 512m
+    # 绝不要 scale 到多副本：多份 IDLE 会触发 iCloud 的并发连接限制。
+    # 代码里还有一层 DB 互斥锁兜底，第二个实例会自行退出。
+    restart: unless-stopped
+
+volumes:
+  hme-data:

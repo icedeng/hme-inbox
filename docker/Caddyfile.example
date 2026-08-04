@@ -1,0 +1,47 @@
+# 反向代理配置示例（Caddy）。证书自动申请与续期。
+#
+# 与 nginx 版同理，最要紧的是**日志里屏蔽路径** ——
+# token 就在 path 里，默认日志会原样记录，
+# 日志文件的泄露面等同于全部取件凭证的泄露面。
+
+api.example.com {
+	log {
+		output file /var/log/caddy/hme.access.log
+		format filter {
+			wrap console
+			fields {
+				# 路径含 token，整体删除；只留请求方法与状态码
+				request>uri delete
+				request>headers>Cookie delete
+				request>headers>Referer delete
+			}
+		}
+	}
+
+	# 取件长轮询最多等 30 秒，超时要留余量
+	reverse_proxy 127.0.0.1:3000 {
+		transport http {
+			read_timeout 90s
+			write_timeout 90s
+		}
+		header_up X-Real-IP {remote_host}
+	}
+
+	# 管理后台建议加 IP 白名单
+	# @admin path /admin*
+	# handle @admin {
+	# 	@blocked not remote_ip 203.0.113.0/24
+	# 	respond @blocked 403
+	# }
+
+	# 根路径重写到内部的 /m/*，但要放过应用自身的路径
+	@pickup {
+		not path /admin*
+		not path /login*
+		not path /_next/*
+		not path /api/*
+		not path /favicon.ico
+		not path /m/*
+	}
+	rewrite @pickup /m{uri}
+}
