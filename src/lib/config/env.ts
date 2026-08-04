@@ -8,6 +8,7 @@
  * 免得 web 容器因为缺 IMAP 密码起不来。
  */
 import { z } from 'zod';
+import { isValidPasswordHash } from '../auth/password.ts';
 
 const NonEmpty = z.string().trim().min(1);
 
@@ -86,7 +87,18 @@ const ImapSchema = z.object({
 });
 
 const WebSchema = z.object({
-  ADMIN_PASSWORD_HASH: NonEmpty,
+  /**
+   * 校验哈希的形状，而不是只查非空。
+   *
+   * 处理 .env 的工具普遍会做变量展开（Next 用 dotenv-expand、
+   * Compose 自己也插值），值里的 `$xxx` 会被静默替换成空串。
+   * 不校验形状的话，被啃坏的哈希会一路走到登录页，
+   * 表现成「密码怎么都不对」——那是最难排查的一类故障。
+   */
+  ADMIN_PASSWORD_HASH: NonEmpty.refine(isValidPasswordHash, {
+    message:
+      '格式不对，应为 scrypt:N:r:p:salt:hash。如果值里出现过 $，多半是被 .env 的变量展开吃掉了一截，请用 `npm run hash-password` 重新生成',
+  }),
   SESSION_SECRET: Key32,
   PUBLIC_BASE_URL: NonEmpty.transform((v) => v.replace(/\/+$/, '')),
   SESSION_TTL_HOURS: IntFromEnv(72, 1, 8760),
