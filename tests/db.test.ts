@@ -332,4 +332,52 @@ describe('未匹配留档', () => {
     );
     db.close();
   });
+
+  test('未匹配率不得把已回填的记录算进去', () => {
+    const db = freshDb();
+    const acct = syncRepo.ensureAccount(db, 'imap.mail.me.com', 993, 'o@icloud.com', isoNow());
+    const since = new Date(Date.now() - 3600e3).toISOString();
+
+    const addUnmatched = (uid: number) =>
+      unmatchedRepo.insertUnmatched(db, {
+        accountId: acct.id,
+        mailbox: 'INBOX',
+        uidvalidity: 1,
+        uid,
+        contentHash: String(uid).padStart(64, 'c'),
+        messageIdHeader: null,
+        fromAddress: 'x@y.com',
+        subject: `第 ${uid} 封`,
+        dateReceived: isoNow(),
+        reason: 'address_not_in_alias_table' as const,
+        headerNames: ['To'],
+        candidates: [],
+        rawHeaders: 'To: x',
+        rawMime: null,
+        expiresAt: '2026-10-04T00:00:00.000Z',
+      })!;
+
+    // 4 封先到、别名后导入 —— 这是常规流程，随后会被自动回填
+    const backfilled = [1, 2, 3, 4].map(addUnmatched);
+    // 1 封是真的不属于任何别名（例如 Sign in with Apple 的私密转发）
+    addUnmatched(5);
+
+    // 未回填时：5 未决，0 已入库
+    assert.equal(unmatchedRepo.recentUnmatchedRatio(db, since).unmatched, 5);
+
+    // 回填成功
+    for (const id of backfilled) {
+      unmatchedRepo.markResolved(db, id, null, isoNow());
+    }
+
+    const r = unmatchedRepo.recentUnmatchedRatio(db, since);
+    assert.equal(
+      r.unmatched,
+      1,
+      '把已回填的算进未匹配率，等于每次回填成功都报一次「归属规则失效」，' +
+        '恰好把系统正常工作报成故障，告警很快会被无视',
+    );
+    assert.equal(unmatchedRepo.countPending(db), 1);
+    db.close();
+  });
 });

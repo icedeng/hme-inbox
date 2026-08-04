@@ -228,8 +228,9 @@ export async function rematchUnmatched(
         unmatchedRepo.markResolved(tx, item.id, outcome.messageId, isoNow());
         resolved++;
       } else if (outcome.kind === 'duplicate') {
-        // 已经以别的途径入库了，这条留档可以收工
-        unmatchedRepo.markResolved(tx, item.id, 0, isoNow());
+        // 已经以别的途径入库了，这条留档可以收工。
+        // 传 null 而不是 0：resolved_message_id 有外键，0 会违反约束并回滚整个事务。
+        unmatchedRepo.markResolved(tx, item.id, null, isoNow());
         resolved++;
       } else {
         unmatchedRepo.recordRematchAttempt(tx, item.id, isoNow());

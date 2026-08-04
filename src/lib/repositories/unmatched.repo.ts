@@ -155,7 +155,15 @@ export function getRawMime(db: Db, id: number): Buffer | null {
   return row ? toBuffer(row.raw_mime) : null;
 }
 
-export function markResolved(db: Db, id: number, messageId: number, at: string): void {
+/**
+ * 标记为已处理。
+ *
+ * `messageId` 允许为 null：重扫时可能发现这封信已经由别的途径入库了，
+ * 此时留档该收工但没有「本次新建的 message」可指。
+ * `resolved_message_id` 有指向 messages(id) 的外键，传 0 会直接违反约束、
+ * 整个事务回滚，留档记录反而永久卡住。
+ */
+export function markResolved(db: Db, id: number, messageId: number | null, at: string): void {
   db.run(
     'UPDATE unmatched_messages SET resolved_at = ?, resolved_message_id = ? WHERE id = ?',
     at,
@@ -209,10 +217,18 @@ export function topCandidateAddresses(db: Db, limit = 20): Array<{ address: stri
     .slice(0, limit);
 }
 
-/** 近一小时未匹配占比，超阈值就该在后台首页告警。 */
+/**
+ * 近一小时未匹配占比，超阈值就在后台首页告警。
+ *
+ * **必须排除已回填的记录**（`resolved_at IS NULL`）。
+ * 「先收到信、后导入别名」是常规流程，那批信会先落进这张表、
+ * 随后被自动回填认领。把它们算进未匹配率，等于每次回填成功
+ * 都要报一次「归属规则失效」—— 恰好把系统正常工作报成了故障，
+ * 告警很快就会被无视，那这条告警也就白设了。
+ */
 export function recentUnmatchedRatio(db: Db, sinceIso: string): { unmatched: number; matched: number } {
   const u = db.get<{ n: number }>(
-    'SELECT COUNT(*) AS n FROM unmatched_messages WHERE created_at > ?',
+    'SELECT COUNT(*) AS n FROM unmatched_messages WHERE created_at > ? AND resolved_at IS NULL',
     sinceIso,
   );
   const m = db.get<{ n: number }>(
