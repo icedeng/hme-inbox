@@ -77,7 +77,15 @@ const ImapSchema = z.object({
       return Number.isNaN(d.getTime()) ? null : d.toISOString();
     })
     .pipe(z.string().nullable()),
-  POLL_INTERVAL_MS: IntFromEnv(60_000, 5_000, 3_600_000),
+  /**
+   * 兜底轮询间隔。
+   *
+   * IDLE 正常时它几乎用不上；但 IDLE 一旦静默失效（NAT 掐连接、
+   * 服务端不推送），这个间隔就是实际的收信延迟上限。
+   * 下限放到 1 秒：一次 SEARCH 很轻（没有新信时不产生 FETCH），
+   * 用它换一个确定的延迟上限是划算的。
+   */
+  POLL_INTERVAL_MS: IntFromEnv(3_000, 1_000, 3_600_000),
   /** IDLE 主动刷新周期。RFC 2177 建议不超过 29 分钟，默认取 25 分钟。 */
   IDLE_REFRESH_MS: IntFromEnv(1_500_000, 60_000, 1_740_000),
   MAX_MESSAGE_BYTES: IntFromEnv(5_242_880, 65_536, 104_857_600),

@@ -55,6 +55,12 @@ export interface MailboxWatcher {
   readonly mailbox: string;
 }
 
+/**
+ * imapflow 的 autoidle 已接管时，idle() 会立刻返回 undefined。
+ * 此时让出这么久再查，避免循环退化成热自旋。
+ */
+const IDLE_RECHECK_MS = 5_000;
+
 function isAuthFailure(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
   const text = `${err.message} ${(err as { responseText?: string }).responseText ?? ''}`;
@@ -99,7 +105,7 @@ export function createMailboxWatcher(
    * 走 mutex：IDLE 的 exists 事件与兜底轮询都会调它，
    * 并发跑会对同一批 UID 重复拉取，也会让游标推进出现竞态。
    */
-  async function sync(): Promise<void> {
+  async function sync(trigger: 'idle' | 'poll' | 'connect' | 'manual'): Promise<void> {
     if (stopped || !client || !client.usable) return;
 
     await mutex.run(async () => {
@@ -128,7 +134,7 @@ export function createMailboxWatcher(
 
       // 单轮上限，防一次拉几千封把内存打爆；剩下的下一轮继续
       const batch = uids.sort((a, b) => a - b).slice(0, config.fetchBatchSize);
-      log.info('发现新邮件', { count: batch.length, total: uids.length });
+      log.info('发现新邮件', { trigger, count: batch.length, total: uids.length });
 
       const collected: FetchedMessage[] = [];
       for await (const msg of client.fetch(
@@ -196,27 +202,44 @@ export function createMailboxWatcher(
       currentUidValidity = uidValidity;
 
       // 新邮件到达。fetch 会自动打断 IDLE，imapflow 处理完再自行恢复。
-      c.on('exists', () => {
-        void sync().catch((err: unknown) => {
+      c.on('exists', (event: { count: number; prevCount: number }) => {
+        log.info('IDLE 推送到新邮件', {
+          count: event.count,
+          prevCount: event.prevCount,
+        });
+        void sync('idle').catch((err: unknown) => {
           log.warn('IDLE 触发的同步失败', { error: err instanceof Error ? err.message : err });
         });
       });
 
       // 连上先补一次：IDLE 只通知「之后」到的信，断线期间的要靠这次补齐
-      await sync();
+      await sync('connect');
 
       // 兜底轮询。IDLE 可能因 NAT 静默掐连接而失效却不报错，
-      // 这个定时器是最后一道保险。
+      // 这个间隔就是实际的收信延迟上限。
       pollTimer = setInterval(() => {
-        void sync().catch((err: unknown) => {
+        void sync('poll').catch((err: unknown) => {
           log.warn('轮询同步失败', { error: err instanceof Error ? err.message : err });
         });
       }, config.pollIntervalMs);
 
       callbacks.onStateChange('idling');
-      // idle() 在连接关闭或 maxIdleTime 到期时返回，外层循环负责重进
+
+      // 维持 IDLE。
+      //
+      // 这里**不能**写成 `while (...) { await c.idle() }`：imapflow 的 idle()
+      // 开头是 `if (!this.idling)`，而它在任何非 IDLE 命令结束后会自动重启
+      // IDLE（autoidle）。所以只要刚跑过一次 search，idling 就是 true，
+      // idle() 会立刻返回 undefined —— 循环退化成热自旋，把 socket I/O 饿死，
+      // 表现出来正是「IDLE 好像没生效，只有轮询在收信」。
+      //
+      // 返回 undefined 说明 imapflow 已自行接管，我们让出一段时间再查即可。
       while (!stopped && c.usable) {
-        await c.idle();
+        const entered = await c.idle();
+        if (stopped || !c.usable) break;
+        if (entered === undefined) {
+          await sleep(IDLE_RECHECK_MS);
+        }
       }
     } finally {
       if (pollTimer) {
@@ -297,7 +320,7 @@ export function createMailboxWatcher(
     },
 
     async syncNow() {
-      await sync();
+      await sync('manual');
     },
   };
 }
