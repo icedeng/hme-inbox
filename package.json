@@ -11,15 +11,33 @@
     "probe": "node --env-file=.env --no-warnings scripts/probe-headers.ts",
     "redact": "node --env-file=.env --no-warnings scripts/redact-fixtures.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --no-warnings --test 'tests/**/*.test.ts'"
+    "test": "node --no-warnings --test 'tests/**/*.test.ts'",
+    "migrate": "node --env-file=.env --no-warnings scripts/migrate.ts",
+    "worker": "node --env-file=.env --no-warnings src/worker/main.ts",
+    "import": "node --env-file=.env --no-warnings scripts/import-jsonl.ts",
+    "hash-password": "node --no-warnings scripts/hash-password.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "url": "node --env-file=.env --no-warnings scripts/show-url.ts"
   },
   "dependencies": {
     "imapflow": "^1.0.191",
-    "mailparser": "^3.7.2"
+    "mailparser": "^3.7.2",
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sanitize-html": "^2.17.6",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/mailparser": "^3.4.6",
     "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/sanitize-html": "^2.16.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
   }
 }

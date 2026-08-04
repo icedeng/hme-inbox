@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+/*
+ * 设计方向：分拣间。
+ *
+ * 信件全堆进一个收件箱，靠读地址分进 40 个格口 —— 这正是归属层在做的事，
+ * 不是装饰性比喻。所以底色取冷灰混凝土而非暖奶油，字体取标识牌式的宽哥特体，
+ * 强调色取邮政蓝。
+ *
+ * 签名元素是「地址标本」：别名的 local-part 按结构拆开呈现，
+ * 词、分隔符、熵后缀各自不同的字重与色值。分隔符恰好是数据里
+ * 真实存在的三种变体（. _ -），这个区分编码的是真信息而非装饰。
+ */
+
+@theme {
+  --color-floor: #eeeff1;
+  --color-floor-raised: #f7f8f9;
+  --color-ink: #17212b;
+  --color-ink-soft: #3d4a57;
+  --color-muted: #6b7885;
+  --color-rule: #cbd2d8;
+  --color-rule-soft: #dfe4e8;
+  --color-transit: #1f4fd8;
+  --color-transit-soft: #e8edfc;
+  --color-live: #d98a0b;
+  --color-live-soft: #fdf3e0;
+  --color-alert: #b3261e;
+  --color-alert-soft: #fbeae9;
+
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Martian Mono', ui-monospace, 'SF Mono', monospace;
+}
+
+@layer base {
+  html {
+    background: var(--color-floor);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  /* 键盘焦点必须始终可见。这是基线要求，不声张但不能省。 */
+  :focus-visible {
+    outline: 2px solid var(--color-transit);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /*
+   * 地址标本 —— 本设计的签名元素。
+   * 别名是机器生成的词对加熵后缀（basil-trowel-3h、orchid.chive.5h），
+   * 读起来像机器写的诗。让它当页面主角，而不是表格里的一行小字。
+   */
+  .specimen {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    word-break: break-all;
+  }
+
+  .specimen-word {
+    color: var(--color-ink);
+  }
+
+  /* 分隔符压低对比，让词根浮出来 */
+  .specimen-sep {
+    color: var(--color-muted);
+    opacity: 0.7;
+  }
+
+  /* 熵后缀是苹果加的随机尾巴，用邮政蓝标出来 */
+  .specimen-entropy {
+    color: var(--color-transit);
+  }
+
+  .specimen-domain {
+    color: var(--color-muted);
+    font-weight: 400;
+  }
+
+  .rule {
+    border-color: var(--color-rule);
+  }
+
+  /* 新信到达时格口的一次脉冲。唯一的动效，其余保持安静。 */
+  @keyframes pulse-live {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-live) 45%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 12px transparent;
+    }
+  }
+
+  .live-pulse {
+    animation: pulse-live 1.8s ease-out 3;
+  }
+}
+
+/* 尊重系统的「减少动态效果」设置 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
