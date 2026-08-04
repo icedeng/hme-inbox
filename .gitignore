@@ -1,0 +1,28 @@
+# 凭证 —— 绝不提交
+.env
+.env.*
+!.env.example
+
+# 真实数据 —— 别名清单与邮件正文都属敏感信息
+*.jsonl
+*.csv
+data/
+attachments/
+*.db
+*.db-wal
+*.db-shm
+
+# 探测样本默认不提交；脱敏后手工 git add -f 指定文件
+tests/fixtures/*.eml
+!tests/fixtures/*.redacted.eml
+
+# 构建产物
+node_modules/
+.next/
+dist/
+out/
+*.tsbuildinfo
+
+# 系统
+.DS_Store
+*.log

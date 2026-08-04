@@ -1,0 +1,25 @@
+{
+  "name": "hme-inbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "iCloud Hide My Email 收件系统：按别名归档转发邮件，提供随机取件 URL",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "probe": "node --env-file=.env --no-warnings scripts/probe-headers.ts",
+    "redact": "node --env-file=.env --no-warnings scripts/redact-fixtures.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --no-warnings --test 'tests/**/*.test.ts'"
+  },
+  "dependencies": {
+    "imapflow": "^1.0.191",
+    "mailparser": "^3.7.2"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.6",
+    "@types/node": "^26.1.2",
+    "typescript": "^7.0.2"
+  }
+}

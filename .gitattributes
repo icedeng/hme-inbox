@@ -1,0 +1,7 @@
+# 邮件固件必须原样保留 CRLF。
+# RFC 5322 的行结束符就是 CRLF，被 git 规范化成 LF 会让头部解析、
+# 头/正文分隔（\r\n\r\n）以及 content_hash 的回归测试全部失真。
+*.eml -text -diff
+
+# 其余文本正常规范化
+* text=auto

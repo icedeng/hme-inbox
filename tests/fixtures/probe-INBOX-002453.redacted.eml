@@ -1,0 +1,376 @@
+Return-path: <bounces+20216706-9a1f-eoha_exhkiw1f=icloud.com_at_em7877_tm_openai_com_df58x6708dr9dc_db8g5873@icloud.com>
+Original-recipient: rfc822;owner@icloud.com
+Received: from p00-icloudmta-smtpin-us-west-2a-100-percent-27 by p227-mailgateway-smtp-756b749d6d-hwxp9 (mailgateway 2628B80)
+	with SMTP id 1e7dce65-69d7-4cc3-9d77-a52d6f564e3b 
+	for <owner@icloud.com>; Tue, 4 Aug 2026 21:52:14 GMT
+X-Apple-MoveToFolder: INBOX 
+X-Apple-Action: MOVE_TO_FOLDER/INBOX
+X-Apple-UUID: 1e7dce65-69d7-4cc3-9d77-a52d6f564e3b
+Received: from o46.ptr554.openai.com (o46.ptr554.openai.com [134.128.96.98])
+	by p00-icloudmta-smtpin-us-west-2a-100-percent-27 (Postfix) with ESMTPS id B2130C0008C
+	for <owner@icloud.com>; Tue, 04 Aug 2026 21:52:09 +0000 (UTC)
+X-ICL-RepId: 019fcec3-3d32-7f2d-a604-a7316f387716
+X-ICL-Info: GAtbRFYDBVFFTVJFSwQEUVUKE0oQVV8PERgKG1hDXxJISFVDVgEEWltAUFlBCBYHEUQEGA1eVQcGUlRHSgEAVUVPS04ZAVBPGRYHGidTWRAbHApCHw1fARkWExNWU1kPNRwLQEAHAUwBFEgYCFVYAxxXBRgVEFAGSA0LWRdAUwwUEEgUF10WEBZEChgZXWkBGgsIEhQFUSIcGgoYDVQYARoURh8dXFlfGk1QWQhERFdATUgYCFVYAxxXBRgVEEYWB0QJQ04eRhYHTFNDVl9GBxsYD1kbX1tCER1bAxUeWRIQFwceVlNZD1UUDxNFDHIORApXKElyZRocVB85J18EMBALNyY4V1MNBRYCWhFDWxYFHUtBRg==
+X-ICL-Score: 3.33304423423
+Authentication-Results: bimi.icloud.com; bimi=pass header.d=openai.com header.selector=default policy.authority=pass policy.authority-uri=https://openai.com/.well-known/bimi/openai_opco_llc_1462268336.pem
+BIMI-Location: v=BIMI1; l=https://openai.com/.well-known/bimi/openai_opco_llc_1462268336.svg a=https://openai.com/.well-known/bimi/openai_opco_llc_1462268336.pem
+X-BIMI-Indicator-Hash: h=BKKuRl2ptpEZMKT8W+hwZapUBwuav2eAQ6AM6xpLXyc= a=sha256
+X-ARC-Info: policy=fail; arc=none; r1=-20; r2=0
+Authentication-Results: arc.icloud.com; arc=none
+Authentication-Results: dmarc.icloud.com; dmarc=pass header.from=tm.openai.com
+X-DMARC-Policy: v=DMARC1; p=reject; rua=mailto:tdfyvl0n@ag.us.dmarcian.com; ruf=mailto:tdfyvl0n@fr.us.dmarcian.com;
+X-DMARC-Info: pass=pass; dmarc-policy=reject; s=r1; d=r1; pdomain=tm.openai.com
+Authentication-Results: dkim-verifier.icloud.com; dkim=pass header.d=tm.openai.com header.i=@tm.openai.com header.b=3PdQBmnh
+Received-SPF: pass (spf.icloud.com: domain of bounces+20216706-9a1f-eoha_exhkiw1f=icloud.com@em7877.tm.openai.com designates 134.128.96.98 as permitted sender) receiver=spf.icloud.com; client-ip=134.128.96.98; helo=o46.ptr554.openai.com; envelope-from=bounces+20216706-9a1f-eoha_exhkiw1f=icloud.com@em7877.tm.openai.com
+Authentication-Results: spf.icloud.com; spf=pass (spf.icloud.com: domain of bounces+20216706-9a1f-eoha_exhkiw1f=icloud.com@em7877.tm.openai.com designates 134.128.96.98 as permitted sender) smtp.mailfrom=bounces+20216706-9a1f-eoha_exhkiw1f=icloud.com@em7877.tm.openai.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tm.openai.com;
+	h=content-transfer-encoding:content-type:date:from:mime-version:subject:
+	reply-to:to:cc:content-type:date:from:subject:to;
+	s=s1; t=1785880328;
+	bh=GfhtpxH7mNL0eXYFWH9lVnBQgyhMNRQbwfnPoJzEhoA=;
+	b=3PdQBmnhBIQPj3iizyiPUZ7NKIL+GvhUs3G6lWCmVD6MVXHMrMcF4dhFaCp64u1oPNSm
+	tcD1oyNVxVx7YRWSNpkFJHGFadPTxe+s7V+iNkYemgJC/ekVjcHqKXRyI7pmQ2JMdIR301
+	i17GZK/7JRRkzCn7M47/O2w0PIjNaeSmqm9uW4tr1OLBo5euGACEFR+wiuvg0Il5qKEpIu
+	p54I/iDSEJJFJfU2kgTSSD64+LP9E///cVMhe7c9FaFnVbnKjiGsxts0QdAFjmcRZ55hFx
+	Yw6U4YhT59lISdQgd84jB+a3Z49Wg6ismuAb2mR6+cuaWxRww2fVt1k5F4aEKDAg==
+Received: by recvd-5c454f579d-d52dh with SMTP id recvd-5c454f579d-d52dh-1-6A725F07-169
+	2026-08-04 21:52:07.984020893 +0000 UTC m=+615613.038413471
+Received: from MjAyMTY3MDY (unknown)
+	by geopod-ismtpd-6 (SG) with HTTP
+	id Dl1s1_1BSxi-yN_o2RerQQ
+	Tue, 04 Aug 2026 21:52:07.969 +0000 (UTC)
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset=utf-8
+Date: Tue, 04 Aug 2026 21:52:08 +0000 (UTC)
+From: ChatGPT <noreply_at_tm_openai_com_d25fxf7c80r4d1_db8g5873@icloud.com>
+Mime-Version: 1.0
+Message-ID: <Dl1s1_1BSxi-yN_o2RerQQ@geopod-ismtpd-6>
+Subject: =?UTF-8?B?5L2g55qEIENoYXRHUFQg5Li05pe26aqM6K+B56CB?=
+Reply-To: noreply_at_tm_openai_com_d25fxf7c80r4d1_db8g5873@icloud.com
+X-SG-EID: 
+ =?us-ascii?Q?u001=2E2cVJOEP6rValQfJKwZO1ZPPp2yIilXnDhherIW4DlflhhOzF6Fg0Pc6qI?=
+ =?us-ascii?Q?eysFaEU+wJE8zKXoYfJYNeD12VaVnuSauHRrzKp?=
+ =?us-ascii?Q?E2Gcmzf7vfnFShL1bW0Rh5XILFalHS63heXXc2s?=
+ =?us-ascii?Q?xar2XCcA1luVq4C34q6v=2FZ5Y31qTvJKlhwCRU0b?=
+ =?us-ascii?Q?P2rcQ37+0pKbsEPnFNbZJ55HQEkljWw5Z8JmTCa?=
+ =?us-ascii?Q?Pc5a+bEcdNWqRS+KznRsSq9i49qtQjNt7g4lzfi?= =?us-ascii?Q?mOBc?=
+X-SG-ID: 
+ =?us-ascii?Q?u001=2ESdBcvi+Evd=2FbQef8eZF3BoMNuFmcP5rq+Py=2FzrrMdK6QuthCfWhsA2OXF?=
+ =?us-ascii?Q?d2ogPal5ecNFS2d9sR6gemXdd8Z7haYPWzNeVm8?=
+ =?us-ascii?Q?pN2N9SN6k4Eum9jYh4xkfkxsuh37bkeGLzkqB0V?=
+ =?us-ascii?Q?U7f7JO6Chp1jv2Z4bBAK7koEQvf61J5vhYIMjeW?=
+ =?us-ascii?Q?gJFZn0a9KVAl+A4c5C7blrzkiQCGpbdyNG8w2+l?=
+ =?us-ascii?Q?kQdQ2j9MSh31C25JaquXNg=3D?=
+To: Hide My Email <eoha_exhkiw1f@icloud.com>
+X-Entity-ID: u001.bVuJR+6WQkYgHBZFem2ybw==
+X-MANTSH: 1TFkXBxwSGREKWUQXbG9geEBZRH5rSEYRCllNF2BfREERCl9ZFwcbGBMRCl9NF2B
+ fREERCllJFxpxGhAadwYHGxoTcR0THBwQEx0cHxJ3BgcYGgYaEQpZXhdsbHkRCkNOF0l9f2lyS
+ BlnG01SaRxlGkd6bE1bBx1dEnJFHhJGEntMEQpYXBcZBBoEHxIFGxoaBB0aBBsTEgQbHhAbHho
+ fGhEKXlkXQltrZUYRCk1cFwcTHBEKTFoXbl56XkRNEQpNThdoaBEKTEYXTWsRCkNaFxsZHgQbG
+ BIEExwEExIRCkJeFxsRCkJcFxsRCkJLF2t7H1p9Rx4FHGluEQpCSRd6RxNFfUtwQ0RgQxEKQkU
+ Xa1J7ZkNNe1t4c0ERCkJOF3pHE0V9S3BDRGBDEQpCTBdtR2FTQUwTR09eeREKQmwXb0VZYGt7a
+ GFiX2ARCkJAF2ZOa0lDGQViU11sEQpCWBdmGFlwQWh7ARJ+WBEKWlgXGxEKcGgXYQFtT2IBbFM
+ dEl8QBxsTHREKcGgXaH5iTHlHRWBlH3kQBxgaHREKcGgXaB5BeH9NRlhtWmYQGhEKcGgXbB8FY
+ hwBTUBIZmcQBxsfExEKcGgXbFJ+GUNYG05sb2cQBxscGBEKcGgXY2wbZWJJaU5GbmEQBxsZExE
+ KcGgXZwVaBVtiHHx6bU8QBxsYGhEKcGgXbk4fU1ABX3xhH08QBxsdHxEKcH8Xbn1yclJYSWRnS
+ H4QBxsYHhEKcF8XZ1lfQwFQXh94GUYQBxsZGREKcH0XaUcbGl5JYGtNeGYQBxsfEhEKcH0XaUc
+ bGl5JYGtNeGYQBxsfEhEKcH8XehtPRU55QFt/RGkQBxsYHBEKcF8XZ2ZZbH94H0RYeBoQBxsYE
+ hEKcH0Xen9/Yh5EQBhsE04QGhEKcH0XaxpcBV1ZRWheWH4QGhEKcF8XZkZJeGxwYnhYe30QBxs
+ YHBEKcH0Xb0ZsXxlAZEVffmEQGhEKcGwXZH1uBVkbAVN/aWUQBxsbHREKbX4XGhEKWE0XSxE=
+X-Proofpoint-GUID: cWUCXb3M1gxC6O0mPFgq-7w8Xo48l8Qf
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA0MDE3NyBTYWx0ZWRfX/BM6bxyYMf3h
+ YzOEQweW3sipso02Cdf/RmMjDO0V96Eec+MmHU5tMfR1BZKYqI20seBbLgTvH5LlReBT8a4DOBR
+ Pmd1sWXy7nGb0RMQS3usyMMUB8YnzdPi4Q2SlOqga/1tLYQ7QaJGGTB9DrW/qJuCovkvnE+3200
+ K1FnXmdM0/ZRX2w2yta7dtFszMf/Y4H/rgRho2MhDKS2mV/SdFfDw75yCyfedUPNc81/8cEAg9M
+ C2Wf7vIZ0sQ22l+3fPtQpwfxpxcS639vVwQ28SyOYa8uie/Euq/QAMfQk6fN9hDeYpGmXe/Z3v2
+ nIPGr63n+5CCRvdGxjjrpiTlI8Ecx9gZtrpqlKnCvyVK30riX3ItsGoFGV472vBPzS8EjhhhtrB
+ CNvegXuWRD/7DH/ICJj+ioY2sO2MIl7hSFu88Tgalc8ryZi+YKkGArv5ldEhsm8rPNkWsOsI
+X-Authority-Info: v=2.4 cv=WLVyn3sR c=1 sm=1 tr=0 ts=6a725f0a b=1
+ cx=c_apl:c_pps a=fCFJy1BmjRgc4+gHIqbKEw==:117 a=fCFJy1BmjRgc4+gHIqbKEw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=5KLPUuaC_9wA:10 a=TSTGaDVFwOkA:10
+ a=g8TUdU_LZmEA:10 a=LG5T7v2SAAAA:8 a=iwIb7pqfxa9Qd60FwAYA:9
+ a=UTyOr3pG_VNdiff-:21 a=frz4AuCg-hUA:10 a=_W_S_7VecoQA:10 a=QEXdDO2ut3YA:10
+ a=qyiPun4vObJkw3d46rQT:22 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22
+ cc=ntf
+X-Proofpoint-ORIG-GUID: cWUCXb3M1gxC6O0mPFgq-7w8Xo48l8Qf
+X-JNJ: AAAAAAABLBi4RZltwu3VLLSsGsekY41ApjUCGcDQ2sY+EWiCJySL9i/9GZcqd0TyTTAROZUmGeSDCPARs9zcUxDsmNogCocNflDTIbXrJ09ZAf8GD/2fxGS3Y63RnRZ1h7MNxYDIgfYDQZOQhwFhnFtj0IaeVfwjnSiZeJmhE2PIDf24ZuwBE3hsgNYe6uZuHy0Y4UW8GyDhwyMf/iZhynPyciFTSJtnJKYfTbfx9OfZUMbEH5Kdy0l2wdDuBjwbPstAJyyuUw9hwpGeMUmdURX+uMZHorBLbYHARIQWRFTLAGqRLUlqxdoX5TL9vy2FcUrKAOo4rsE/xvJJJEgo1isd6TkFFo3TioqDbuIFiFKu36+HG+kSrZB6ZZSkQn/VLxinCCNnAZeVcTI0FKDA6870M6y9U9lh1PqblYH3hpXfCOlEXpK2pRfZ8K+G/7pvfRyMRPkN90gO37P+ycsfODEHmyYjzDrJfATP9H3vVCad8XwRL+v5ggej5X8SD9IXz5gA+b3R8orYdOWkoHnucoXqKQAMxjCGXVMKdPnyHUW08p0m4wa6yIAlAsH5MhUgzBxe250nCG/qOLhBI/cmlc3wPpygsljV+1ACy7TMEo84fm5nUXUnig+H1yEFKM2rw7JFwQPGrl+1SBfDrIgzRMyqT2BDmhhCpw4sLWbNzlqWrt781pKqigpeYvwEK6jX3w1f2gHCivMNnbdKVReqRHa/MoE4DOiaLUvJW9H1R7Y1pFIFdlJqGDBhUGa8MB89
+X-ICLOUD-HME: p=eoha_exhkiw1f@icloud.com; d=; f=owner@icloud.com; r=to; s=noreply@tm.openai.com
+
+<html>
+  <head>
+   =20
+    <title>=E4=BD=A0=E7=9A=84 ChatGPT =E4=B8=B4=E6=97=B6=E9=AA=8C=E8=AF=81=
+=E7=A0=81</title>
+   =20
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1" />
+    <style type=3D"text/css">
+      @font-face {
+        font-family: "S=C3=B6hne";
+        src: url(https://cdn.openai.com/common/fonts/soehne/soehne-buch.wof=
+f2)
+            format("woff2");
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+      }
+      .ExternalClass,
+      .ExternalClass div,
+      .ExternalClass font,
+      .ExternalClass p,
+      .ExternalClass span,
+      .ExternalClass td,
+      img {
+        line-height: 100%;
+      }
+      #outlook a {
+        padding: 0;
+      }
+      .ExternalClass,
+      .ReadMsgBody {
+        width: 100%;
+      }
+      a,
+      blockquote,
+      body,
+      li,
+      p,
+      table,
+      td {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table,
+      td {
+        mso-table-lspace: 0;
+        mso-table-rspace: 0;
+      }
+      img {
+        -ms-interpolation-mode: bicubic;
+        border: 0;
+        height: auto;
+        outline: 0;
+        text-decoration: none;
+      }
+      table {
+        border-collapse: collapse !important;
+      }
+      #bodyCell,
+      #bodyTable,
+      body {
+          height: 100% !important;
+          margin: 0;
+          padding: 0;
+          font-family: S=C3=B6hne, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+      #bodyCell {
+        padding: 20px;
+      }
+      #bodyTable {
+        width: 560px;
+      }
+      @media only screen and (max-width: 480px) {
+        #bodyCell,
+        #bodyTable,
+        body {
+          width: 100% !important;
+        }
+        a,
+        blockquote,
+        body,
+        li,
+        p,
+        table,
+        td {
+          -webkit-text-size-adjust: none !important;
+        }
+        body {
+          min-width: 100% !important;
+        }
+        #bodyTable {
+          max-width: 560px !important;
+        }
+        #signIn {
+          max-width: 280px !important;
+        }
+      }
+    </style>
+    <!--[if mso]>
+        <style type=3D"text/css">
+          #bodyCell,
+          #bodyTable,
+          body {
+            font-family: Helvetica, Arial, sans-serif; !important
+          }
+        </style>
+    <![endif]-->
+
+  </head>
+  <body>
+    <center>
+      <table
+        style=3D"width: 560px;-webkit-text-size-adjust: 100%;-ms-text-size-=
+adjust: 100%;mso-table-lspace: 0pt;mso-table-rspace: 0pt;margin: 0;padding:=
+ 0;border-collapse: collapse !important;height: 100% !important;background-=
+color: #ffffff;"
+        align=3D"center"
+        border=3D"0"
+        cellpadding=3D"0"
+        cellspacing=3D"0"
+        height=3D"100%"
+        width=3D"100%"
+        id=3D"bodyTable"
+      >
+        <tr>
+          <td
+            align=3D"center"
+            valign=3D"top"
+            id=3D"bodyCell"
+            style=3D"-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 1=
+00%;mso-table-lspace: 0pt;mso-table-rspace: 0pt;margin: 0;padding: 0 16px;h=
+eight: 100% !important;"
+          >
+            <div class=3D"top" style=3D"background-color: #ffffff;color:#20=
+2123; padding: 56px 0 32px 0;">
+              <p
+                style=3D"text-align: left;-webkit-text-size-adjust: 100%;-m=
+s-text-size-adjust: 100%; margin: 0;"
+              >
+               =20
+                <img
+                  src=3D"https://cdn.openai.com/API/logo-assets/openai-logo=
+-email-header-2.png"
+                  width=3D"560"
+                  height=3D"168"
+                  alt=3D"OpenAI"
+                  title=3D""
+                  style=3D"height:36px;width:auto;-ms-interpolation-mode: b=
+icubic;border: 0;line-height: 100%;outline: none;text-decoration: none;"
+                >
+               =20
+              </p>
+            </div>
+            <table
+              class=3D"main"
+            >
+              <tr>
+                  <td style=3D"background-color: #ffffff;color:#353740; tex=
+t-align: left; line-height:1.5;">
+
+                     =20
+
+
+                      <p style=3D"font-size: 16px; line-height: 24px; margi=
+n: 0;">
+                        =E8=BE=93=E5=85=A5=E6=AD=A4=E4=B8=B4=E6=97=B6=E9=AA=
+=8C=E8=AF=81=E7=A0=81=E4=BB=A5=E7=BB=A7=E7=BB=AD=EF=BC=9A
+                      </p>
+
+                      <p style=3D"font-family: Menlo, Monaco, Lucida Consol=
+e, Arial; font-size: 24px; line-height: 28px; background-color: #F3F3F3; co=
+lor: #5D5D5D; border-radius: 16px; padding: 28px 24px; margin: 24px 0;">
+                        <!--[if mso]>
+                            <span style=3D"font-family: Lucida Console, Ari=
+al, sans-serif;">
+                        <![endif]-->
+                        935298
+                        <!--[if mso]>
+                            </span>
+                        <![endif]-->
+                      </p>
+
+                      <p style=3D"font-size: 16px; line-height: 24px; text-=
+align: left; margin: 0; margin-bottom: 24px;">
+                        =E5=A6=82=E6=9E=9C=E5=B9=B6=E9=9D=9E=E4=BD=A0=E6=9C=
+=AC=E4=BA=BA=E5=B0=9D=E8=AF=95=E5=88=9B=E5=BB=BA ChatGPT =E5=B8=90=E6=88=B7=
+=EF=BC=8C=E8=AF=B7=E5=BF=BD=E7=95=A5=E6=AD=A4=E7=94=B5=E5=AD=90=E9=82=AE=E4=
+=BB=B6=E3=80=82
+                      </p>
+
+                      <p style=3D"-webkit-text-size-adjust: 100%;-ms-text-s=
+ize-adjust: 100%; margin: 0; color: #8F8F8F;">
+                        <br/>=E8=B0=A8=E8=87=B4=E9=97=AE=E5=80=99<br/>ChatG=
+PT =E5=9B=A2=E9=98=9F
+                      </p>
+                  </td>
+              </tr>
+
+              <tr>
+                <td>
+                    <p style=3D"height: 1px; width: 100%; background: #E5E5=
+E5; margin: 40px 0;"></p>
+                </td>
+              </tr>
+            </table>
+            <table
+              class=3D"footer"
+              style=3D"text-align: left;background: #ffffff;color:#6e6e80;w=
+idth: 100%;"
+            >
+                <tr>
+                    <td>
+                       =20
+                        <img
+                        src=3D"https://cdn.openai.com/API/logo-assets/opena=
+i-logo-email-header-2.png"
+                        width=3D"64"
+                        alt=3D"OpenAI"
+                        title=3D""
+                        style=3D"width:64px;height:auto;-ms-interpolation-m=
+ode: bicubic;border: 0;line-height: 100%;outline: none;text-decoration: non=
+e;margin-bottom: 16px;"
+                    >
+                       =20
+
+                    </td>
+                </tr>
+                <tr>
+                    <td style=3D"font-size: 12px; line-height: 16px; paddin=
+g-bottom: 16px;">
+                        <p style=3D"margin: 0;">
+                           =20
+                                <a style=3D"color: #8F8F8F" href=3D"http://=
+url3243.email.openai.com/ls/click?upn=3Du001.IQLfsj4kk-2BK7JhymNusRMtxuwNyi=
+H8tHYK-2BH0HuuCVk-3DZtqF_4UD9QTEsNTPibFD4ULrTnHsRJXoIp7YgWQHrMrSnVmN5lx2uH0=
+o6iKMTWgJauG1BtXeKAa5Bm4HfbcR-2BO40kqTiqxXfmLZ9tJG27ZUUGke4Sz0pCgg-2FA8pFAU=
+1C-2FoTVM57kk12XBDH2UESPCB3u26INLJsvuWbUfS7013XDaL-2Bt4lcRNPTHFTPL5k-2BeOTb=
+8hCKapTA0SvAQymR-2FD-2Bg1ztWURP8b7m1T5-2FNrc0LpHDaeSdGhAozcJgSr1RDaKYT4Zacm=
+Og2LSrCTflPihvcj41FY8AEmwZGY-2BD7VjyhVd2OdOkgfXzo3p-2BzuoPYcj7OMLvFeTsgEKm-=
+2BSqK-2FkpLfCz-2F8PQTblLkKcCD5smhaOoO-2FrJzHD3MYekZ13T3dgWgTnPYGZkR-2F-2B-2=
+BMO2dhgy5ImqJASH8yNXCZuoMOYhBr9ryLn8-3D">ChatGPT</a>
+                           =20
+
+                        </p>
+                        <p style=3D"margin: 0;">
+                            <a style=3D"color: #8F8F8F" href=3D"http://url3=
+243.email.openai.com/ls/click?upn=3Du001.IQLfsj4kk-2BK7JhymNusRMmfwoG2v3nTg=
+HW39-2Fobue0tn1LK51XoZKbBfyGht7CMae5Pv_4UD9QTEsNTPibFD4ULrTnHsRJXoIp7YgWQHr=
+MrSnVmN5lx2uH0o6iKMTWgJauG1BtXeKAa5Bm4HfbcR-2BO40kqTiqxXfmLZ9tJG27ZUUGke4Sz=
+0pCgg-2FA8pFAU1C-2FoTVM57kk12XBDH2UESPCB3u26INLJsvuWbUfS7013XDaL-2Bt4lcRNPT=
+HFTPL5k-2BeOTb8hCKapTA0SvAQymR-2FD-2Bg1ztWURP8b7m1T5-2FNrc0LpHDaez2IJ5m6XIU=
+mcKHVLaOySNkP04WniL4ri-2B626YUNgNcx9BsBojkS-2FOeGcdnvk8-2FH7gAK77-2BvtEfWTT=
+H8JOHKd0jhwXSbVeMOQjmH9c7-2Bqx94fnoFYL4w40ZfKTpMClk7J9jlRzJRrI9XKI-2BYqBfAO=
+uHgI0y-2Blxs0Ugbp-2BDICMj5lYEQCpLbeAEeQ1CcQERMHw-3D">=E5=B8=AE=E5=8A=A9=E4=
+=B8=AD=E5=BF=83</a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </center>
+  <img src=3D"http://url3243.email.openai.com/wf/open?upn=3Du001.nzhKWHg1Eg=
+VRgU53KlNsh-2FVsPzZqR8eLlPQoPM2lWZR9nbwR-2Bz7H5gOf3D5WOKtqrOsYjtdd7ss4Aa3gF=
+nGojpc5HNii8EUkrrKcjGo-2Bss6XBvhmfxRgAaSlDgPgv-2BnuxZ5AlepA4KSvEhkvK5qFduqN=
+pHuzu3MrKHu-2F7b9bnnFC37stewwlvT5xOCyFe0l7jtehOZ08Of0zgLbJnGqW6SV88VvmPPt4T=
+CgYh9LbDZWhoJUfFCrqNGZfNjgFgEDY02TavkaSZ6cfNT0-2BpOGWeE908q7arLzWJlvilsBOW7=
+1OzvPTW02xXRtgDqDairIjBcQ73UdJj8-2BOxggUOlw3tzkCBhCetz2i2WZLuvHZCsWxb6bJB9Q=
+kt5O6i0bncSX2Eyqf0TDWE3iFjSX0oSReViM-2FsfbOK1c2479DfS-2BPsX4-3D" alt=3D"" w=
+idth=3D"1" height=3D"1" border=3D"0" style=3D"height:1px !important;width:1=
+px !important;border-width:0 !important;margin-top:0 !important;margin-bott=
+om:0 !important;margin-right:0 !important;margin-left:0 !important;padding-=
+top:0 !important;padding-bottom:0 !important;padding-right:0 !important;pad=
+ding-left:0 !important;"/></body>
+</html>

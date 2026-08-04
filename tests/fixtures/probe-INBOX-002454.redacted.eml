@@ -1,0 +1,332 @@
+Return-path: <bounce+e84128.b462b7-eoha_exhkiw1f=icloud.com_at_tm1_openai_com_d956x87081r9d9_d58g5873@icloud.com>
+Original-recipient: rfc822;owner@icloud.com
+Received: from p00-icloudmta-smtpin-us-east-1a-60-percent-31 by p227-mailgateway-smtp-756b749d6d-47dbj (mailgateway 2628B80)
+	with SMTP id 6d7d4b22-3638-447f-86b3-c3525c7d1f1c 
+	for <owner@icloud.com>; Tue, 4 Aug 2026 21:52:18 GMT
+X-Apple-MoveToFolder: INBOX 
+X-Apple-Action: MOVE_TO_FOLDER/INBOX
+X-Apple-UUID: 6d7d4b22-3638-447f-86b3-c3525c7d1f1c
+Received: from v5101.v5375b7fa.use4.send.mailgun.net (v5101.v5375b7fa.use4.send.mailgun.net [159.112.244.101])
+	by p00-icloudmta-smtpin-us-east-1a-60-percent-31 (Postfix) with ESMTPS id 01063C000DA
+	for <owner@icloud.com>; Tue, 04 Aug 2026 21:52:13 +0000 (UTC)
+X-ICL-RepId: 019fcec3-4e0d-7af7-96d7-b6a9efac3e56
+X-ICL-Info: GAtbRFYDBVFFTVJFSwQEUVUKE0oQVV8PERgKG1hDXxJISFNOVgEHUFtLUkNWAQZTVRwCShpfQwwWHE0SQAQHUE1XBENOAlRVWBUJFhVvVQ0HFwMbTVcLCxYVCQIcHlUNGDkSGkkeWRIQFwceVlNZD1UfAkoMXQdMGgkDGRlZGAEaFEYFGw1aDRQUORQXQlgHGUwBNxFTWg0AHUgUF10WChAVCUoOBQdSRFcQQksHAwBCHwdZDUNTVlsKAxkcHlsDHBUBAhYeWAcBWRYDCg1AV0RJV1kOBQVVQBtRERkeQxEQTUgEHV5STBgYDxsfRVhMGxwSVxxUCxYYSEgYCFVYAxxXBRgVEFsLEURaRUgCAFJNSVJFSQUEU0dXBxIbVAdQTEtVRBlUU1FEGiYDFQEYDQUcCBYRHlUNGEc=
+X-ICL-Score: 3.33304423423
+Authentication-Results: bimi.icloud.com; bimi=pass header.d=openai.com header.selector=default policy.authority=pass policy.authority-uri=https://openai.com/.well-known/bimi/openai_opco_llc_1462268336.pem
+BIMI-Location: v=BIMI1; l=https://openai.com/.well-known/bimi/openai_opco_llc_1462268336.svg a=https://openai.com/.well-known/bimi/openai_opco_llc_1462268336.pem
+X-BIMI-Indicator-Hash: h=BKKuRl2ptpEZMKT8W+hwZapUBwuav2eAQ6AM6xpLXyc= a=sha256
+X-ARC-Info: policy=fail; arc=none; r1=-20; r2=0
+Authentication-Results: arc.icloud.com; arc=none
+Authentication-Results: dmarc.icloud.com; dmarc=pass header.from=tm1.openai.com
+X-DMARC-Policy: v=DMARC1; p=reject; pct=100; fo=1; ri=3600; rua=mailto:7d81092@dmarc.mailgun.org,mailto:e25ba351@inbox.ondmarc.com; ruf=mailto:7d81092@dmarc.mailgun.org,mailto:e25ba351@inbox.ondmarc.com;
+X-DMARC-Info: pass=pass; dmarc-policy=reject; s=r1; d=r1; pdomain=tm1.openai.com
+Authentication-Results: dkim-verifier.icloud.com; dkim=pass header.d=tm1.openai.com header.i=@tm1.openai.com header.b=QWCT0Q9V
+Received-SPF: pass (spf.icloud.com: domain of bounce+e84128.b462b7-eoha_exhkiw1f=icloud.com@tm1.openai.com designates 159.112.244.101 as permitted sender) receiver=spf.icloud.com; client-ip=159.112.244.101; helo=v5101.v5375b7fa.use4.send.mailgun.net; envelope-from=bounce+e84128.b462b7-eoha_exhkiw1f=icloud.com@tm1.openai.com
+Authentication-Results: spf.icloud.com; spf=pass (spf.icloud.com: domain of bounce+e84128.b462b7-eoha_exhkiw1f=icloud.com@tm1.openai.com designates 159.112.244.101 as permitted sender) smtp.mailfrom=bounce+e84128.b462b7-eoha_exhkiw1f=icloud.com@tm1.openai.com
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=tm1.openai.com; q=dns/txt; s=pdk2; t=1785880332; x=1785887532;
+ h=Content-Type: Content-Transfer-Encoding: Message-Id: Reply-To: To: To: From: From: Subject: Subject: Mime-Version: Date: Sender: Sender;
+ bh=dsctjh+vDqgBsfXu5QVzexsVAn7fV9VrXEByoGSaSV4=;
+ b=QWCT0Q9VvTXjEpkRucG0mSeqGEp+j54HJtgz9GQ0FIhExRRqJhKRarK4fcq2LotVmDy9l8x6/7QoKcGcIrr7YyIdEbfioSe1WV5zUZbQtbTf847Zik6h2iF7Yo6Jo69l18YGLI572WV2yAgWAehgkVCvY+YzWfR29cIdEL3dUWtRqtKi0WfMDqNToUrtOH35drC+yFekNoUDwLOs6coFPQS1C+vccR0XUJrTKwh0psPhbNaiU/wyczBf5a/sE7KN8e8KthgoXlWMt+qXvPD8MflHvSS3cAc1Wk95YQJ6/FJY7dRyAHNc0iQIjM//ARrl8GUr68V6uZOgdKzW1WGIQg==
+X-Mailgun-Sid: WyI1OTA1ZSIsImxvYW1fY29ybmVsNWdAaWNsb3VkLmNvbSIsImI0NjJiNyJd
+Received: by f3dd55cc7fb73435f4fe4a9c9721eae92db40ab98a9c181ff9d94bc368b7c057 with HTTP
+ id 6a725f0c0c781bce9575c82a; Tue, 04 Aug 2026 21:52:12 GMT
+X-Mailgun-Sending-Ip-Pool-Name: transactional emails
+X-Mailgun-Sending-Ip-Pool: 682375dbe1a722357625a2dd
+X-Mailgun-Sending-Ip: 159.112.244.101
+Sender: otp@tm1.openai.com
+Date: Tue, 04 Aug 2026 21:52:12 +0000
+Mime-Version: 1.0
+Subject: =?UTF-8?b?5L2g55qEIENoYXRHUFQg5Li05pe26aqM6K+B56CB?=
+From: ChatGPT <otp_at_tm1_openai_com_db5ax67986r6d1_d48g5873@icloud.com>
+To: Hide My Email <eoha_exhkiw1f@icloud.com>
+X-Mailgun-Tag: email-otp-verification,fallback
+Reply-To: noreply_at_tm_openai_com_d25fxf7c80r4d1_db8g5873@icloud.com
+Message-Id: <20260804215212.aecd129233ade31c@tm1.openai.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="utf-8"
+X-MANTSH: 1TFkXBx0ZHREKWUQXaUhub3JCGHB/TlMRCllNF2BfREERCl9ZFwcSHBEKX00XYF9
+ EQREKWUkXGnEaEBp3BgccHHEcGB4QGBIZEncGBxgaBhoRClleF2xseREKQ04XXn9dH2RMSxxZG
+ 0Frf3x7eWFpRFlFUmVub0NOb0NNWEURClhcFxkEGgQfEgUbGgQbHBgEGRoEGBMQGx4aHxoRCl5
+ ZF0Jba2VaEQpNXBcHGBkfEQpMWhduE3oTREERCkVZF2hraxEKTF8XegUFBQUFBQUFBR0RCk1OF
+ 2hoEQpMRhdjTWsRCkNaFxsfEwQbGxgEGB4eBBsaGxEKQl4XGxEKQlwXGxEKQksXa3sfWn1HHgU
+ caW4RCkJJF2RAS3NNGUVFYE5YEQpCRRdsa15jUn0TZWkaWxEKQk4XZEBLc00ZRUVgTlgRCkJMF
+ 2RgXB5PcHxuf19wEQpCbBdvRVlga3toYWJfYBEKQkAXZk5rSUMZBWJTXWwRCkJYF2YYWXBBaHs
+ BEn5YEQpaWBcZEQpwZxdoWhJfXhh8fmhlBRAHGx8TEQpwaBdvfn9EXAUeR3hcXRAHGxoeEQpwa
+ BdhAW1PYgFsUx0SXxAHGx8SEQpwaBdofmJMeUdFYGUfeRAHGx8TEQpwaBdsHwViHAFNQEhmZxA
+ HGx8YEQpwaBdsUn4ZQ1gbTmxvZxAHGx8YEQpwaBdjbBtlYklpTkZuYRAHGxgTEQpwaBdnBVoFW
+ 2IcfHptTxAHHRoRCnBoF25OH1NQAV98YR9PEAcbHx0RCnB/F259cnJSWElkZ0h+EAcbGB4RCnB
+ fF2dZX0MBUF4feBlGEAcbGR8RCnB9F2lHGxpeSWBrTXhmEAcbHhwRCnB9F2lHGxpeSWBrTXhmE
+ AcbHhwRCnB/F28dTUJPSFpZaGNjEAcbGRoRCnB9F28dTUJPSFpZaGNjEAcbGRoRCnBfF2hIRW5
+ jR1MfHBxtEAcbHhsRCnB9F2hIRW5jR1MfHBxtEAcbHhsRCnBsF2R9bgVZGwFTf2llEAcbGxwRC
+ m1+FxoRClhNF0sR
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA0MDE3NyBTYWx0ZWRfXwTevZrMQNvkS
+ 5FfnMRLgbeuuKt9txSKEGiX8Iwu08HrYs0NlgvXs35gRuTozGa7r0tRESsxSmM+kqdMWttKslCn
+ uqZEMCc3jlwusTYDo0ATbGcOl9+ocl6sOBE/hws2AThm/yXVjslmaRSA/JnTY2BYfvZfyzk2xw+
+ HScG508KB3P0omherboeCNYbuqWnp7uJ7we4OuHM2EdbkGDKkQrm1wKq4HDS1I0/+7EGAdBpkQ1
+ az/L6eUPMETlLKbUS5xmwnAgWxuAo+sCJaa/mtp8IG6cqcJBzp+svdYfDGQOihurv0nC/j6N+6k
+ EVmGyeoFBjVhMPlalYPH/ytOMCYTCjHmcLR62bAjfvop1MGhXgkhiu7pIl2XdUSeZrJzja7ndZz
+ d+7gq8K1WCmpFLVuYgtCnjfUKMUIMd8Qb+piWk9VZnQda5J3uOm3rKM2OxgycM9TBOl7hr7L
+X-Proofpoint-ORIG-GUID: tUw5Nfa6s1kAUVQSKCnsoxODEidEigro
+X-Proofpoint-GUID: tUw5Nfa6s1kAUVQSKCnsoxODEidEigro
+X-Authority-Info: v=2.4 cv=e5wLiKp/ c=1 sm=1 tr=0 ts=6a725f0e b=1
+ cx=c_apl:c_pps a=kx2urdrwEM/j8EsBQ4AJCA==:117 a=kx2urdrwEM/j8EsBQ4AJCA==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=5KLPUuaC_9wA:10 a=nUMAJckGbR8A:10
+ a=LG5T7v2SAAAA:8 a=-BdCj9j9AAAA:8 a=iwIb7pqfxa9Qd60FwAYA:9
+ a=q13KY_3RTJ4qvfAv:21 a=frz4AuCg-hUA:10 a=_W_S_7VecoQA:10 a=QEXdDO2ut3YA:10
+ a=qyiPun4vObJkw3d46rQT:22 a=q2PKn5jL56lZ5O96TxEF:22 a=5yU3S35YU4bGjq-dph-N:22
+ a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf
+X-JNJ: AAAAAAABSJBOSajcQBFVZ60iwd2W6abrT4sxzWe90sBOmKkPD1kedlcV196njjlIfI+F2PMd8Sdd8pdGj+4TePlz6sgN9YzB/lnG9KO5EQo3Oz/PkAdW1gpYKAdcRZ6k0dgCH/6gH63a7CelGfiE1uCxwIDReQYtSDKoGSs/fo7ry6nT5LqHQhopop8mhaKFstj6Ok40YVcTBjlKkT9b1jEzlJSPYEb/Di3JtfS3aCDcW8W4eZMWFPT4yCwL2FhczBiAo9VohTZckt8QmyYT4fXtXxBY8QvglPAcIEQvw59Xf7r+m8Ofyx79Gd6GqrO4tYp3itc1lT8bP7ox8DQDANfpAPpSX6v09b4WBkYDVJP6P7xvAGThWrccpP0GIrHfGf0237YS5W/kDBHTPmo8bmuBVb+YNdhPfDp9L7TpeP2c4zyQuk8rZWIqb97LT4KCfxHDyOQglRVTQeAZa7Z19BMF0XxrYgsWNBvXjZQEen0Ib0jacAPj6XxElhyU5sSsZZrmT+YKGELd3lD5R+5Q7l/z2szHXCUeX/pgtmHA1zSbC0qkK2Q0FsoZ3/PZ567bSBeaTR3Lb4k4d4MTDqQxBQd6RyvVixWXsRGKcXRv7XAEOyLGTJtRwS4VlBHCte7pyjnZM/rw815aqP8xMcZY2FHZZ4kE1ZgUGIjfVOem9JwFbuLZwMEv1LjRpkLTHhXZKYFIHzNu7ukTHb8zHHsCcDhUObd6Us0FaNyCdVM2GFZEfXAOKbVfzclF/tNPdbbxYtgDpqFqFA==
+X-ICLOUD-HME: p=eoha_exhkiw1f@icloud.com; d=; f=owner@icloud.com; r=to; s=otp@tm1.openai.com
+
+<html>
+  <head>
+   =20
+    <title>=E4=BD=A0=E7=9A=84 ChatGPT =E4=B8=B4=E6=97=B6=E9=AA=8C=E8=AF=81=
+=E7=A0=81</title>
+   =20
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1" />
+    <style type=3D"text/css">
+      @font-face {
+        font-family: "S=C3=B6hne";
+        src: url(https://cdn.openai.com/common/fonts/soehne/soehne-buch.wof=
+f2)
+            format("woff2");
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+      }
+      .ExternalClass,
+      .ExternalClass div,
+      .ExternalClass font,
+      .ExternalClass p,
+      .ExternalClass span,
+      .ExternalClass td,
+      img {
+        line-height: 100%;
+      }
+      #outlook a {
+        padding: 0;
+      }
+      .ExternalClass,
+      .ReadMsgBody {
+        width: 100%;
+      }
+      a,
+      blockquote,
+      body,
+      li,
+      p,
+      table,
+      td {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table,
+      td {
+        mso-table-lspace: 0;
+        mso-table-rspace: 0;
+      }
+      img {
+        -ms-interpolation-mode: bicubic;
+        border: 0;
+        height: auto;
+        outline: 0;
+        text-decoration: none;
+      }
+      table {
+        border-collapse: collapse !important;
+      }
+      #bodyCell,
+      #bodyTable,
+      body {
+          height: 100% !important;
+          margin: 0;
+          padding: 0;
+          font-family: S=C3=B6hne, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+      #bodyCell {
+        padding: 20px;
+      }
+      #bodyTable {
+        width: 560px;
+      }
+      @media only screen and (max-width: 480px) {
+        #bodyCell,
+        #bodyTable,
+        body {
+          width: 100% !important;
+        }
+        a,
+        blockquote,
+        body,
+        li,
+        p,
+        table,
+        td {
+          -webkit-text-size-adjust: none !important;
+        }
+        body {
+          min-width: 100% !important;
+        }
+        #bodyTable {
+          max-width: 560px !important;
+        }
+        #signIn {
+          max-width: 280px !important;
+        }
+      }
+    </style>
+    <!--[if mso]>
+        <style type=3D"text/css">
+          #bodyCell,
+          #bodyTable,
+          body {
+            font-family: Helvetica, Arial, sans-serif; !important
+          }
+        </style>
+    <![endif]-->
+
+  </head>
+  <body>
+    <center>
+      <table
+        style=3D"width: 560px;-webkit-text-size-adjust: 100%;-ms-text-size-=
+adjust: 100%;mso-table-lspace: 0pt;mso-table-rspace: 0pt;margin: 0;padding:=
+ 0;border-collapse: collapse !important;height: 100% !important;background-=
+color: #ffffff;"
+        align=3D"center"
+        border=3D"0"
+        cellpadding=3D"0"
+        cellspacing=3D"0"
+        height=3D"100%"
+        width=3D"100%"
+        id=3D"bodyTable"
+      >
+        <tr>
+          <td
+            align=3D"center"
+            valign=3D"top"
+            id=3D"bodyCell"
+            style=3D"-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 1=
+00%;mso-table-lspace: 0pt;mso-table-rspace: 0pt;margin: 0;padding: 0 16px;h=
+eight: 100% !important;"
+          >
+            <div class=3D"top" style=3D"background-color: #ffffff;color:#20=
+2123; padding: 56px 0 32px 0;">
+              <p
+                style=3D"text-align: left;-webkit-text-size-adjust: 100%;-m=
+s-text-size-adjust: 100%; margin: 0;"
+              >
+               =20
+                <img
+                  src=3D"https://cdn.openai.com/API/logo-assets/openai-logo=
+-email-header-2.png"
+                  width=3D"560"
+                  height=3D"168"
+                  alt=3D"OpenAI"
+                  title=3D""
+                  style=3D"height:36px;width:auto;-ms-interpolation-mode: b=
+icubic;border: 0;line-height: 100%;outline: none;text-decoration: none;"
+                >
+               =20
+              </p>
+            </div>
+            <table
+              class=3D"main"
+            >
+              <tr>
+                  <td style=3D"background-color: #ffffff;color:#353740; tex=
+t-align: left; line-height:1.5;">
+
+                     =20
+
+
+                      <p style=3D"font-size: 16px; line-height: 24px; margi=
+n: 0;">
+                        =E8=BE=93=E5=85=A5=E6=AD=A4=E4=B8=B4=E6=97=B6=E9=AA=
+=8C=E8=AF=81=E7=A0=81=E4=BB=A5=E7=BB=A7=E7=BB=AD=EF=BC=9A
+                      </p>
+
+                      <p style=3D"font-family: Menlo, Monaco, Lucida Consol=
+e, Arial; font-size: 24px; line-height: 28px; background-color: #F3F3F3; co=
+lor: #5D5D5D; border-radius: 16px; padding: 28px 24px; margin: 24px 0;">
+                        <!--[if mso]>
+                            <span style=3D"font-family: Lucida Console, Ari=
+al, sans-serif;">
+                        <![endif]-->
+                        935298
+                        <!--[if mso]>
+                            </span>
+                        <![endif]-->
+                      </p>
+
+                      <p style=3D"font-size: 16px; line-height: 24px; text-=
+align: left; margin: 0; margin-bottom: 24px;">
+                        =E5=A6=82=E6=9E=9C=E5=B9=B6=E9=9D=9E=E4=BD=A0=E6=9C=
+=AC=E4=BA=BA=E5=B0=9D=E8=AF=95=E5=88=9B=E5=BB=BA ChatGPT =E5=B8=90=E6=88=B7=
+=EF=BC=8C=E8=AF=B7=E5=BF=BD=E7=95=A5=E6=AD=A4=E7=94=B5=E5=AD=90=E9=82=AE=E4=
+=BB=B6=E3=80=82
+                      </p>
+
+                      <p style=3D"-webkit-text-size-adjust: 100%;-ms-text-s=
+ize-adjust: 100%; margin: 0; color: #8F8F8F;">
+                        <br/>=E8=B0=A8=E8=87=B4=E9=97=AE=E5=80=99<br/>ChatG=
+PT =E5=9B=A2=E9=98=9F
+                      </p>
+                  </td>
+              </tr>
+
+              <tr>
+                <td>
+                    <p style=3D"height: 1px; width: 100%; background: #E5E5=
+E5; margin: 40px 0;"></p>
+                </td>
+              </tr>
+            </table>
+            <table
+              class=3D"footer"
+              style=3D"text-align: left;background: #ffffff;color:#6e6e80;w=
+idth: 100%;"
+            >
+                <tr>
+                    <td>
+                       =20
+                        <img
+                        src=3D"https://cdn.openai.com/API/logo-assets/opena=
+i-logo-email-header-2.png"
+                        width=3D"64"
+                        alt=3D"OpenAI"
+                        title=3D""
+                        style=3D"width:64px;height:auto;-ms-interpolation-m=
+ode: bicubic;border: 0;line-height: 100%;outline: none;text-decoration: non=
+e;margin-bottom: 16px;"
+                    >
+                       =20
+
+                    </td>
+                </tr>
+                <tr>
+                    <td style=3D"font-size: 12px; line-height: 16px; paddin=
+g-bottom: 16px;">
+                        <p style=3D"margin: 0;">
+                           =20
+                                <a style=3D"color: #8F8F8F" href=3D"https:/=
+/chatgpt.com">ChatGPT</a>
+                           =20
+
+                        </p>
+                        <p style=3D"margin: 0;">
+                            <a style=3D"color: #8F8F8F" href=3D"https://hel=
+p.openai.com">=E5=B8=AE=E5=8A=A9=E4=B8=AD=E5=BF=83</a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </center>
+  </body>
+</html>
