@@ -40,6 +40,24 @@ export default async function AliasesPage({
   });
   const stats = messagesRepo.statsByAlias(db);
 
+  // token 解密一次就够，列表与批量复制共用
+  const rows = aliases.map((alias) => ({
+    alias,
+    url: buildPickupUrl(
+      env.PUBLIC_BASE_URL,
+      decryptToken(alias.tokenCiphertext, env.TOKEN_ENC_KEY),
+      alias.email,
+    ),
+    stat: stats.get(alias.id),
+  }));
+
+  // 导出与批量复制都跟随当前筛选，所见即所得
+  const exportParams = new URLSearchParams();
+  if (params.q) exportParams.set('q', params.q);
+  if (params.status) exportParams.set('status', params.status);
+  const exportQuery = exportParams.size > 0 ? `&${exportParams.toString()}` : '';
+  const allPairs = rows.map((r) => `${r.alias.email}----${r.url}`).join('\n');
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -49,15 +67,42 @@ export default async function AliasesPage({
             每个地址一条独立的取件 URL，泄露一条不会波及其他地址。
           </p>
         </div>
-        <form action={rotateAllTokensAction}>
-          <button
-            type="submit"
-            className="rounded border border-alert/40 px-3 py-1.5 text-xs text-alert transition-colors hover:bg-alert-soft"
-            title="怀疑数据库泄露时使用。全部旧 URL 立即失效，需要重新分发。"
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 导出的就是当前筛选出的这批，所以把筛选参数原样带上 */}
+          <a
+            href={`/api/admin/export?format=txt${exportQuery}`}
+            className="rounded border border-rule bg-floor-raised px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-transit hover:text-transit"
+            title="每行一条 email----url"
           >
-            全部轮换
-          </button>
-        </form>
+            导出 txt
+          </a>
+          <a
+            href={`/api/admin/export?format=csv${exportQuery}`}
+            className="rounded border border-rule bg-floor-raised px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-transit hover:text-transit"
+          >
+            csv
+          </a>
+          <a
+            href={`/api/admin/export?format=json${exportQuery}`}
+            className="rounded border border-rule bg-floor-raised px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-transit hover:text-transit"
+          >
+            json
+          </a>
+          <CopyButton
+            value={allPairs}
+            label={`复制全部 ${aliases.length} 条`}
+            className="!px-3 !py-1.5"
+          />
+          <form action={rotateAllTokensAction}>
+            <button
+              type="submit"
+              className="rounded border border-alert/40 px-3 py-1.5 text-xs text-alert transition-colors hover:bg-alert-soft"
+              title="怀疑数据库泄露时使用。全部旧 URL 立即失效，需要重新分发。"
+            >
+              全部轮换
+            </button>
+          </form>
+        </div>
       </div>
 
       <form className="flex flex-wrap gap-2">
@@ -93,10 +138,7 @@ export default async function AliasesPage({
         </div>
       ) : (
         <ul className="space-y-2">
-          {aliases.map((alias) => {
-            const token = decryptToken(alias.tokenCiphertext, env.TOKEN_ENC_KEY);
-            const url = buildPickupUrl(env.PUBLIC_BASE_URL, token, alias.email);
-            const stat = stats.get(alias.id);
+          {rows.map(({ alias, url, stat }) => {
             const isLive =
               stat?.lastReceivedAt != null &&
               Date.now() - new Date(stat.lastReceivedAt).getTime() < LIVE_WINDOW_MS;
@@ -129,7 +171,8 @@ export default async function AliasesPage({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    <CopyButton value={url} label="复制取件 URL" />
+                    <CopyButton value={alias.email} label="复制地址" />
+                    <CopyButton value={url} label="复制 URL" />
                     <Link
                       href={`/admin/aliases/${alias.id}`}
                       className="rounded border border-rule px-2.5 py-1 text-xs text-ink-soft transition-colors hover:border-transit hover:text-transit"

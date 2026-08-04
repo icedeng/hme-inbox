@@ -37,8 +37,9 @@ export default async function AliasDetailPage({ params }: { params: Promise<{ id
         <Link href="/admin/aliases" className="text-xs text-muted transition-colors hover:text-transit">
           ← 收件地址
         </Link>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <AddressSpecimen email={alias.email} size="lg" />
+          <CopyButton value={alias.email} label="复制地址" />
         </div>
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
           <span className="font-mono">{alias.label || '（无标签）'}</span>
@@ -55,7 +56,8 @@ export default async function AliasDetailPage({ params }: { params: Promise<{ id
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold tracking-wide text-ink-soft uppercase">取件 URL</h2>
           <div className="flex items-center gap-2">
-            <CopyButton value={url} />
+            <CopyButton value={url} label="复制 URL" />
+            <CopyButton value={`${alias.email}----${url}`} label="复制 地址----URL" />
             <form action={rotateTokenAction}>
               <input type="hidden" name="aliasId" value={alias.id} />
               <button
