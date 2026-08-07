@@ -2,6 +2,8 @@ import { afterEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openDb, type Db } from '../src/lib/db/driver.ts';
 import { migrate } from '../src/lib/db/migrate.ts';
+import { hashPassword } from '../src/lib/auth/password.ts';
+import { loadWebEnv } from '../src/lib/config/env.ts';
 import { normalizeAddress } from '../src/lib/email/address.ts';
 import { createPushAliasesHandler } from '../src/lib/api/pushAliases.ts';
 import { createToken } from '../src/lib/tokens/token.ts';
@@ -10,6 +12,13 @@ import * as aliasesRepo from '../src/lib/repositories/aliases.repo.ts';
 const TOKEN_KEY = Buffer.alloc(32, 7).toString('base64');
 const PUSH_TOKEN = 'push-token-for-tests-32-characters';
 const opened: Db[] = [];
+const BASE_ENV = {
+  NODE_ENV: 'test' as const,
+  ADMIN_PASSWORD_HASH: hashPassword('test-only'),
+  SESSION_SECRET: Buffer.alloc(32, 8).toString('base64'),
+  PUBLIC_BASE_URL: 'https://inbox.example',
+  TOKEN_ENC_KEY: TOKEN_KEY,
+};
 
 function harness(pushToken: string | null = PUSH_TOKEN) {
   const db = openDb(':memory:');
@@ -155,5 +164,23 @@ describe('隐藏邮箱推送 API', () => {
     assert.equal(response.status, 500);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.deepEqual(await response.json(), { error: { code: 'internal_error' } });
+  });
+});
+
+describe('隐藏邮箱推送配置', () => {
+  test('推送 Token 可选，空字符串兼容 Compose 默认值', () => {
+    assert.equal(loadWebEnv(BASE_ENV).HME_PUSH_TOKEN, undefined);
+    assert.equal(loadWebEnv({ ...BASE_ENV, HME_PUSH_TOKEN: '' }).HME_PUSH_TOKEN, undefined);
+  });
+
+  test('推送 Token 去除首尾空白且拒绝过短值', () => {
+    assert.equal(
+      loadWebEnv({ ...BASE_ENV, HME_PUSH_TOKEN: '  configured-push-token  ' }).HME_PUSH_TOKEN,
+      'configured-push-token',
+    );
+    assert.throws(
+      () => loadWebEnv({ ...BASE_ENV, HME_PUSH_TOKEN: 'short' }),
+      /HME_PUSH_TOKEN/,
+    );
   });
 });

@@ -110,6 +110,11 @@ const WebSchema = z.object({
   SESSION_SECRET: Key32,
   PUBLIC_BASE_URL: NonEmpty.transform((v) => v.replace(/\/+$/, '')),
   SESSION_TTL_HOURS: IntFromEnv(72, 1, 8760),
+  /** Chrome 扩展推送别名使用；空值表示禁用写入 API。 */
+  HME_PUSH_TOKEN: z.preprocess(
+    (value) => (typeof value === 'string' && !value.trim() ? undefined : value),
+    z.string().trim().min(16).optional(),
+  ),
 });
 
 const TokenSchema = z.object({
