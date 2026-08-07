@@ -12,6 +12,24 @@ import { isValidPasswordHash } from '../auth/password.ts';
 
 const NonEmpty = z.string().trim().min(1);
 
+const OptionalNonEmpty = z.preprocess(
+  (value) => (typeof value === 'string' && !value.trim() ? undefined : value),
+  z.string().trim().min(1).optional(),
+);
+
+const OptionalHttpUrl = OptionalNonEmpty.refine(
+  (value) => {
+    if (!value) return true;
+    try {
+      const protocol = new URL(value).protocol;
+      return protocol === 'http:' || protocol === 'https:';
+    } catch {
+      return false;
+    }
+  },
+  { message: '必须是 http 或 https URL' },
+);
+
 /** 32 字节的 base64/base64url 密钥。 */
 const Key32 = NonEmpty.refine(
   (v) => {
@@ -115,6 +133,9 @@ const WebSchema = z.object({
     (value) => (typeof value === 'string' && !value.trim() ? undefined : value),
     z.string().trim().min(16).optional(),
   ),
+  /** turb-gpt-free-register 通用 API 邮箱池；任一项为空时禁用管理页推送。 */
+  TURB_GPT_BASE_URL: OptionalHttpUrl.transform((value) => value?.replace(/\/+$/, '')),
+  TURB_GPT_AUTH_CODE: OptionalNonEmpty,
 });
 
 const TokenSchema = z.object({

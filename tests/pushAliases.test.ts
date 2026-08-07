@@ -183,4 +183,35 @@ describe('隐藏邮箱推送配置', () => {
       /HME_PUSH_TOKEN/,
     );
   });
+
+  test('turb 邮箱池配置可选，空字符串表示禁用', () => {
+    const env = loadWebEnv({
+      ...BASE_ENV,
+      TURB_GPT_BASE_URL: '',
+      TURB_GPT_AUTH_CODE: '',
+    });
+
+    assert.equal(env.TURB_GPT_BASE_URL, undefined);
+    assert.equal(env.TURB_GPT_AUTH_CODE, undefined);
+  });
+
+  test('turb 地址去除末尾斜杠且鉴权码去除空白', () => {
+    const env = loadWebEnv({
+      ...BASE_ENV,
+      TURB_GPT_BASE_URL: ' http://192.168.0.250:5050/// ',
+      TURB_GPT_AUTH_CODE: '  test-auth-code  ',
+    });
+
+    assert.equal(env.TURB_GPT_BASE_URL, 'http://192.168.0.250:5050');
+    assert.equal(env.TURB_GPT_AUTH_CODE, 'test-auth-code');
+  });
+
+  test('turb 地址拒绝非 HTTP 协议和畸形 URL', () => {
+    for (const value of ['ftp://example.com', 'not-a-url']) {
+      assert.throws(
+        () => loadWebEnv({ ...BASE_ENV, TURB_GPT_BASE_URL: value }),
+        /TURB_GPT_BASE_URL/,
+      );
+    }
+  });
 });
