@@ -47,6 +47,8 @@ services:
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?必须设置，例如 https://api.example.com}
       SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-72}
       HME_PUSH_TOKEN: ${HME_PUSH_TOKEN:-}
+      TURB_GPT_BASE_URL: ${TURB_GPT_BASE_URL:-}
+      TURB_GPT_AUTH_CODE: ${TURB_GPT_AUTH_CODE:-}
     # 不对外暴露端口：公网入口是同一个 compose 网络里的 proxy 服务。
     # 需要在宿主上直接调试时，用 `docker compose port web 3000` 或临时加 ports。
     expose:

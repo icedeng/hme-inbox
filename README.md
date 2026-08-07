@@ -56,6 +56,19 @@ npm run dev                      # 另开一个终端跑 Web
 `HME_IMAP_PASS` 是 **App 专用密码**，在 appleid.apple.com 生成，不是 Apple ID 主密码。
 注意改主密码会一次性吊销全部 App 专用密码。
 
+### 推送到 turb 邮箱池
+
+在 `/admin/aliases` 使用“推送选中”或“全部推送”前，在 `.env` 配置：
+
+```env
+TURB_GPT_BASE_URL=http://192.168.0.250:5050
+TURB_GPT_AUTH_CODE=你的_WEBUI_AUTH_CODE
+```
+
+两个入口都只推送启用邮箱，内容以“邮箱 + HME 取件 URL”导入
+`turb-gpt-free-register` 的通用 API 邮箱池。已存在邮箱会跳过，不覆盖其状态和取件 URL。
+任一变量留空时管理页按钮禁用；鉴权码只由 Web 服务端读取，不会发送给浏览器。
+
 ## 部署
 
 ```bash
