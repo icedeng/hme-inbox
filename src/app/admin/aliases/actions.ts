@@ -9,6 +9,7 @@ import {
   type TurbEmailPoolErrorCode,
 } from '../../../lib/turb/emailPoolClient.ts';
 import { pushAliasesToPool } from '../../../lib/turb/pushAliasesToPool.ts';
+import { parseAliasPoolPushMode } from '../../../lib/browser/aliasPoolPushMode.ts';
 
 function returnParams(formData: FormData): URLSearchParams {
   const params = new URLSearchParams();
@@ -34,7 +35,12 @@ export async function pushAliasesToPoolAction(formData: FormData): Promise<void>
     redirect(target(params));
   }
 
-  const mode = formData.get('pushMode') === 'all' ? 'all' : 'selected';
+  const mode = parseAliasPoolPushMode(formData.get('pushMode'));
+  if (!mode) {
+    params.set('poolPush', 'error');
+    params.set('errorCode', 'invalid_request');
+    redirect(target(params));
+  }
   const ids = formData
     .getAll('aliasId')
     .map((value) => Number(value))

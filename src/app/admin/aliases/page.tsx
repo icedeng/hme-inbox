@@ -187,6 +187,7 @@ export default async function AliasesPage({
       )}
 
       <form id={POOL_PUSH_FORM_ID} action={pushAliasesToPoolAction}>
+        <input type="hidden" name="pushMode" value="selected" />
         <input type="hidden" name="q" value={params.q ?? ''} />
         <input type="hidden" name="status" value={params.status ?? ''} />
         {aliases.length === 0 ? (

@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { aliasPoolPushButtonState } from '@/lib/browser/aliasPoolPushControls';
+import {
+  setAliasPoolPushMode,
+  type AliasPoolPushMode,
+} from '@/lib/browser/aliasPoolPushMode';
 
 export interface AliasPoolPushControlsProps {
   formId: string;
@@ -42,15 +46,20 @@ export function AliasPoolPushControls({
   });
   const unavailableTitle = configured ? undefined : '未配置 turb 邮箱池服务';
 
+  const setFormMode = (mode: AliasPoolPushMode): void => {
+    const form = document.getElementById(formId);
+    const field = form?.querySelector<HTMLInputElement>('input[name="pushMode"]');
+    if (field) setAliasPoolPushMode(field, mode);
+  };
+
   return (
     <>
       <button
         type="submit"
         form={formId}
-        name="pushMode"
-        value="selected"
         disabled={state.selectedDisabled}
         title={unavailableTitle ?? '仅推送选中的启用邮箱'}
+        onClick={() => setFormMode('selected')}
         className="rounded border border-transit/50 px-3 py-1.5 text-xs text-transit transition-colors hover:bg-transit/10 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {submitting ? '推送中…' : `推送选中${selectedCount > 0 ? ` ${selectedCount}` : ''}`}
@@ -58,14 +67,14 @@ export function AliasPoolPushControls({
       <button
         type="submit"
         form={formId}
-        name="pushMode"
-        value="all"
         disabled={state.allDisabled}
         title={unavailableTitle ?? `推送全部 ${activeCount} 个启用邮箱`}
         onClick={(event) => {
           if (!confirm(`确定推送全部 ${activeCount} 个启用邮箱到 turb 邮箱池吗？`)) {
             event.preventDefault();
+            return;
           }
+          setFormMode('all');
         }}
         className="rounded border border-transit bg-transit px-3 py-1.5 text-xs text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
       >
