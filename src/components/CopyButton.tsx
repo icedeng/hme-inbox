@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { copyText } from '@/lib/browser/copyText';
 
 /**
  * 一键复制。
@@ -21,11 +22,11 @@ export function CopyButton({
 
   const copy = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(value);
+      await copyText(value);
       setState('copied');
       setTimeout(() => setState('idle'), 1600);
     } catch {
-      // 非 HTTPS 或未授权时 clipboard API 不可用，提示用户手动选中
+      // 两种复制方式都不可用时，提示用户手动选中。
       setState('failed');
       setTimeout(() => setState('idle'), 3000);
     }

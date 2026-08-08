@@ -8,6 +8,26 @@ const config: NextConfig = {
   // 不要让打包器去分析 —— 打包后 better-sqlite3 式的绑定路径会失效
   serverExternalPackages: ['mailparser', 'imapflow'],
 
+  // 内网 compose 直接暴露 Next.js 端口时没有 Nginx/Caddy 重写层。
+  // 兼容旧的取件链接格式：/{token}/{email} → /m/{token}/{email}。
+  // afterFiles 早于动态路由匹配，必须显式排除应用自身的顶级路径。
+  async rewrites() {
+    return {
+      afterFiles: [
+        {
+          source:
+            '/:token((?!m/|admin/|api/|login/|_next/)[^/]+)/:email',
+          destination: '/m/:token/:email',
+        },
+        {
+          source:
+            '/:token((?!m/|admin/|api/|login/|_next/)[^/]+)/:email/:messageId',
+          destination: '/m/:token/:email/:messageId',
+        },
+      ],
+    };
+  },
+
   async headers() {
     return [
       {

@@ -78,6 +78,38 @@ describe('别名 UPSERT', () => {
     db.close();
   });
 
+  test('纯文本清单重复导入时保留已有元数据', () => {
+    const db = freshDb();
+    makeAlias(db, 'cobalt-alibi-1g@icloud.com', '保留标签', 9);
+    const addr = normalizeAddress('cobalt-alibi-1g@icloud.com')!;
+    const token = createToken(TEST_KEY);
+
+    aliasesRepo.upsertAlias(db, {
+      email: 'cobalt-alibi-1g@icloud.com',
+      emailNormalized: addr.normalized,
+      localPart: addr.localPart,
+      domain: addr.domain,
+      label: '',
+      note: '',
+      batchIndex: null,
+      portal: '',
+      verified: false,
+      sourceCreatedAt: null,
+      importBatchId: null,
+      tokenHash: token.hash,
+      tokenPrefix: token.prefix,
+      tokenCiphertext: token.ciphertext,
+      metadataProvided: false,
+    });
+
+    const after = aliasesRepo.findByNormalized(db, 'cobalt-alibi-1g@icloud.com')!;
+    assert.equal(after.label, '保留标签');
+    assert.equal(after.batchIndex, 9);
+    assert.equal(after.portal, 'macos-system-settings');
+    assert.equal(after.verified, true);
+    db.close();
+  });
+
   test('含点的地址不被 dot-strip，不同别名不会互相覆盖', () => {
     const db = freshDb();
     makeAlias(db, 'mint.cave.4m@icloud.com');

@@ -96,6 +96,8 @@ export interface UpsertAliasInput {
   verified: boolean;
   sourceCreatedAt: string | null;
   importBatchId: number | null;
+  /** 纯文本导入没有元数据时，更新已有别名不应清空原有字段。 */
+  metadataProvided?: boolean;
   /** 仅在首次插入时使用；已存在的别名绝不覆盖 token。 */
   tokenHash: string;
   tokenPrefix: string;
@@ -117,6 +119,7 @@ export function upsertAlias(db: Db, input: UpsertAliasInput): UpsertOutcome {
     input.emailNormalized,
   );
 
+  const updateMetadata = input.metadataProvided !== false;
   db.run(
     `INSERT INTO aliases (
        email, email_normalized, local_part, domain, label, note,
@@ -124,11 +127,11 @@ export function upsertAlias(db: Db, input: UpsertAliasInput): UpsertOutcome {
        token_hash, token_prefix, token_ciphertext
      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
      ON CONFLICT(email_normalized) DO UPDATE SET
-       label           = excluded.label,
-       note            = excluded.note,
-       batch_index     = excluded.batch_index,
-       portal          = excluded.portal,
-       verified        = excluded.verified,
+       label           = CASE WHEN ? THEN excluded.label ELSE label END,
+       note            = CASE WHEN ? THEN excluded.note ELSE note END,
+       batch_index     = CASE WHEN ? THEN excluded.batch_index ELSE batch_index END,
+       portal          = CASE WHEN ? THEN excluded.portal ELSE portal END,
+       verified        = CASE WHEN ? THEN excluded.verified ELSE verified END,
        import_batch_id = excluded.import_batch_id,
        updated_at      = strftime('%Y-%m-%dT%H:%M:%fZ','now')`,
     input.email,
@@ -145,6 +148,11 @@ export function upsertAlias(db: Db, input: UpsertAliasInput): UpsertOutcome {
     input.tokenHash,
     input.tokenPrefix,
     input.tokenCiphertext,
+    fromBool(updateMetadata),
+    fromBool(updateMetadata),
+    fromBool(updateMetadata),
+    fromBool(updateMetadata),
+    fromBool(updateMetadata),
   );
 
   return before ? 'updated' : 'inserted';

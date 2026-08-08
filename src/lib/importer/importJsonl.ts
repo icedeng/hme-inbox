@@ -1,5 +1,6 @@
 /**
- * 解析 icloud-hme-cli 产出的 batch*.jsonl。纯函数，不碰数据库。
+ * 解析 icloud-hme-cli 产出的 batch*.jsonl，或每行一个地址的纯文本清单。
+ * 纯函数，不碰数据库。
  *
  * 关于 `index` 字段：它**不能当主键**。上游 `BatchRunner.run` 里
  * `startingIndex = 已有行数 + 1`，换个输出文件或用 --overwrite 之后
@@ -32,6 +33,8 @@ export interface ImportRecord {
   portal: string;
   verified: boolean;
   sourceCreatedAt: string | null;
+  /** 纯文本清单没有标签等元数据，重复导入时应保留已有值。 */
+  metadataProvided: boolean;
 }
 
 export interface ImportError {
@@ -49,19 +52,43 @@ export interface ImportParseResult {
   duplicatesInFile: string[];
 }
 
+export type ImportFormat = 'jsonl' | 'text';
+
 /** 截断过长的原始行，避免错误详情把数据库撑爆。 */
 function truncate(s: string, max = 200): string {
   return s.length <= max ? s : `${s.slice(0, max)}…`;
 }
 
-export function parseBatchJsonl(buffer: Buffer): ImportParseResult {
+/**
+ * 兼容两种导入文件：
+ * - icloud-hme-cli 产出的 JSONL（每行一个 JSON 对象）
+ * - 纯文本地址清单（每行一个邮箱地址）
+ */
+export function parseBatchJsonl(buffer: Buffer, format?: ImportFormat): ImportParseResult {
   const fileSha256 = createHash('sha256').update(buffer).digest('hex');
   const text = buffer.toString('utf8');
+  const resolvedFormat = format ?? detectImportFormat(text);
 
   const records: ImportRecord[] = [];
   const errors: ImportError[] = [];
   const seen = new Map<string, number>();
   const duplicatesInFile: string[] = [];
+
+  function addRecord(record: ImportRecord): void {
+    const prev = seen.get(record.address.normalized);
+    if (prev !== undefined) {
+      duplicatesInFile.push(record.address.normalized);
+      // 同一文件里重复出现时保留后者：--append 模式下后写的是更新的
+      records.splice(prev, 1);
+      // splice 之后其余记录的下标要整体前移
+      for (const [key, idx] of seen) {
+        if (idx > prev) seen.set(key, idx - 1);
+      }
+    }
+
+    seen.set(record.address.normalized, records.length);
+    records.push(record);
+  }
 
   const lines = text.split('\n');
   let totalLines = 0;
@@ -71,6 +98,27 @@ export function parseBatchJsonl(buffer: Buffer): ImportParseResult {
     if (!raw) continue;
     totalLines++;
     const lineNo = i + 1;
+
+    if (resolvedFormat === 'text') {
+      const address = normalizeAddress(raw);
+      if (!address) {
+        errors.push({ line: lineNo, raw: truncate(raw), reason: `无法解析为邮件地址：${raw}` });
+        continue;
+      }
+
+      addRecord({
+        email: raw,
+        address,
+        label: '',
+        note: '',
+        batchIndex: null,
+        portal: '',
+        verified: false,
+        sourceCreatedAt: null,
+        metadataProvided: false,
+      });
+      continue;
+    }
 
     let parsed: unknown;
     try {
@@ -99,19 +147,7 @@ export function parseBatchJsonl(buffer: Buffer): ImportParseResult {
       continue;
     }
 
-    const prev = seen.get(address.normalized);
-    if (prev !== undefined) {
-      duplicatesInFile.push(address.normalized);
-      // 同一文件里重复出现时保留后者：--append 模式下后写的是更新的
-      records.splice(prev, 1);
-      // splice 之后其余记录的下标要整体前移
-      for (const [key, idx] of seen) {
-        if (idx > prev) seen.set(key, idx - 1);
-      }
-    }
-
-    seen.set(address.normalized, records.length);
-    records.push({
+    addRecord({
       email: result.data.email.trim(),
       address,
       label: result.data.label ?? '',
@@ -120,6 +156,7 @@ export function parseBatchJsonl(buffer: Buffer): ImportParseResult {
       portal: result.data.portal ?? '',
       verified: result.data.verified ?? false,
       sourceCreatedAt: normalizeTimestamp(result.data.created_at),
+      metadataProvided: true,
     });
   }
 
@@ -130,6 +167,11 @@ export function parseBatchJsonl(buffer: Buffer): ImportParseResult {
     totalLines,
     duplicatesInFile: [...new Set(duplicatesInFile)],
   };
+}
+
+function detectImportFormat(text: string): ImportFormat {
+  const firstLine = text.split('\n').map((line) => line.trim()).find(Boolean);
+  return firstLine?.startsWith('{') ? 'jsonl' : 'text';
 }
 
 /** 上游写的是秒级 ISO8601（`2026-08-04T21:12:48Z`），统一成毫秒精度 UTC。 */

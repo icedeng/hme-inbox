@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { basename } from 'node:path';
+import { basename, extname } from 'node:path';
 import { getDb } from '../../lib/db/connection.ts';
 import { withWriteTx } from '../../lib/db/driver.ts';
 import { webEnv } from '../../lib/config/env.ts';
@@ -46,23 +46,39 @@ export async function importAction(
 ): Promise<ImportResult> {
   await assertAuthed();
 
+  const pasted = formData.get('emailsText');
+  const pastedText = typeof pasted === 'string' ? pasted : '';
   const file = formData.get('file');
-  if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, message: '请选择一个 jsonl 文件。' };
-  }
-  if (file.size > 8 * 1024 * 1024) {
-    return { ok: false, message: '文件超过 8MB，请确认选对了文件。' };
+  let sourceName: string;
+  let buffer: Buffer;
+  let format: 'text' | undefined;
+
+  if (pastedText.trim()) {
+    if (Buffer.byteLength(pastedText) > 8 * 1024 * 1024) {
+      return { ok: false, message: '粘贴内容超过 8MB，请分批导入。' };
+    }
+    sourceName = 'pasted-aliases.txt';
+    buffer = Buffer.from(pastedText);
+    format = 'text';
+  } else if (file instanceof File && file.size > 0) {
+    if (file.size > 8 * 1024 * 1024) {
+      return { ok: false, message: '文件超过 8MB，请确认选对了文件。' };
+    }
+    sourceName = file.name;
+    buffer = Buffer.from(await file.arrayBuffer());
+    format = extname(file.name).toLowerCase() === '.txt' ? 'text' : undefined;
+  } else {
+    return { ok: false, message: '请粘贴邮箱地址，或选择一个 jsonl / txt 文件。' };
   }
 
   const env = webEnv();
   const db = getDb();
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const parsed = parseBatchJsonl(buffer);
+  const parsed = parseBatchJsonl(buffer, format);
 
   if (parsed.records.length === 0) {
     return {
       ok: false,
-      message: '没有解析出任何别名。确认这是 icloud-hme-cli 导出的 jsonl。',
+      message: '没有解析出任何别名。请上传 icloud-hme-cli 的 JSONL，或每行一个邮箱地址的 TXT 文件。',
       failed: parsed.errors.length,
       errors: parsed.errors.slice(0, 10).map((e) => ({ line: e.line, reason: e.reason })),
     };
@@ -73,7 +89,7 @@ export async function importAction(
   withWriteTx(db, (tx) => {
     const batchId = miscRepo.createImportBatch(
       tx,
-      basename(file.name),
+      basename(sourceName),
       parsed.fileSha256,
       parsed.totalLines,
     );
@@ -93,6 +109,7 @@ export async function importAction(
         verified: record.verified,
         sourceCreatedAt: record.sourceCreatedAt,
         importBatchId: batchId,
+        metadataProvided: record.metadataProvided,
         tokenHash: token.hash,
         tokenPrefix: token.prefix,
         tokenCiphertext: token.ciphertext,

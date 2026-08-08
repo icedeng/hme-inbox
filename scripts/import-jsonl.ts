@@ -1,10 +1,11 @@
 /**
- * 从命令行导入 batch*.jsonl。
+ * 从命令行导入 batch*.jsonl 或每行一个邮箱地址的 .txt 文件。
  * 与后台上传走同一套逻辑（src/lib/importer + aliases.repo），
  * 所以两条路径的行为保证一致。
  *
  * 用法：
  *   npm run import -- ../icloud-hme-cli-v0.2.0/batch0804.jsonl
+ *   npm run import -- aliases.txt
  *   npm run import -- batch.jsonl --print-urls
  */
 import { readFileSync, existsSync } from 'node:fs';
@@ -76,6 +77,7 @@ function main(): void {
           verified: record.verified,
           sourceCreatedAt: record.sourceCreatedAt,
           importBatchId: batchId,
+          metadataProvided: record.metadataProvided,
           tokenHash: token.hash,
           tokenPrefix: token.prefix,
           tokenCiphertext: token.ciphertext,

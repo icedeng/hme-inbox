@@ -72,10 +72,11 @@ export function cookieOptions(expiresAt: Date): {
   path: string;
   expires: Date;
 } {
+  const env = webEnv();
   return {
     httpOnly: true,
-    // 生产环境走 HTTPS；本地 http 开发时不能强制 secure，否则 cookie 根本不会被设置
-    secure: process.env.NODE_ENV === 'production',
+    // 是否 Secure 由实际访问协议决定。内网 HTTP 若仍设 Secure，浏览器会丢弃会话 Cookie。
+    secure: env.PUBLIC_BASE_URL.startsWith('https://'),
     sameSite: 'lax',
     path: '/',
     expires: expiresAt,

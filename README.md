@@ -51,6 +51,10 @@ npm run worker                   # 收信进程，前台运行
 npm run dev                      # 另开一个终端跑 Web
 ```
 
+`npm run import` 和后台“导入”页面也支持纯文本 `.txt`：每行填写一个 Hide My Email 地址，
+空行会忽略，重复地址会按后出现的记录更新。纯文本导入不需要 `icloud-hme-cli`，且不会清空
+已存在地址的标签、备注和来源等元数据。后台还可直接粘贴多行地址，无需先创建文件。
+
 打开 http://localhost:3000 ，用管理员密码登录。
 
 `HME_IMAP_PASS` 是 **App 专用密码**，在 appleid.apple.com 生成，不是 Apple ID 主密码。

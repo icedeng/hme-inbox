@@ -272,7 +272,21 @@ describe('别名归属 — 证据收集', () => {
   });
 });
 
-describe('jsonl 导入解析', () => {
+describe('别名导入解析', () => {
+  test('一行一个纯文本地址能导入并规范化', () => {
+    const txt = ['  cobalt-alibi-1g@iCloud.COM  ', '', 'orchid.chive.5h@icloud.com'].join('\r\n');
+    const r = parseBatchJsonl(Buffer.from(txt));
+
+    assert.equal(r.records.length, 2);
+    assert.equal(r.errors.length, 0);
+    assert.deepEqual(
+      r.records.map((record) => record.address.normalized),
+      ['cobalt-alibi-1g@icloud.com', 'orchid.chive.5h@icloud.com'],
+    );
+    assert.equal(r.records[0]!.batchIndex, null);
+    assert.equal(r.records[0]!.metadataProvided, false);
+  });
+
   test('解析真实格式并规范化', () => {
     const jsonl = [
       '{"created_at":"2026-08-04T21:12:53Z","email":"cobalt-alibi-1g@icloud.com","index":2,"label":"batch0804-002","note":"","portal":"macos-system-settings","verified":true}',
