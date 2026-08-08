@@ -11,6 +11,7 @@ import { webEnv } from '../../../../lib/config/env.ts';
 import {
   parseParams,
   negotiatePickupFormat,
+  applyPickupViewDefaults,
   resolveAlias,
   fetchMessages,
   markMessagesRead,
@@ -72,10 +73,15 @@ export async function GET(
     });
     return errorResponse(400, 'invalid_parameter', parsed.error.message, parsed.error.field);
   }
-  const params = {
+  const negotiatedFormat = negotiatePickupFormat(
+    parsed.params.format,
+    search,
+    request.headers.get('accept'),
+  );
+  const params = applyPickupViewDefaults({
     ...parsed.params,
-    format: negotiatePickupFormat(parsed.params.format, search, request.headers.get('accept')),
-  };
+    format: negotiatedFormat,
+  }, search);
 
   const resolved = resolveAlias(db, token, email);
   if (!resolved.ok) {

@@ -53,20 +53,24 @@ function renderMessage(message: MessageSummary, htmlBody: string | null): string
     ? `<span class="code">${escapeHtml(message.verificationCode)}</span>`
     : '';
 
-  return `<article class="card">
-    <div class="message-head">
-      <h2>${subject}</h2>
-      <time>${escapeHtml(formatTime(message.dateReceived))}</time>
-    </div>
-    <div class="meta">
+  return `<details class="card">
+    <summary class="message-summary">
+      <div class="message-head">
+        <h2>${subject}</h2>
+        <time>${escapeHtml(formatTime(message.dateReceived))}</time>
+      </div>
+      <div class="meta">
       <span>${escapeHtml(sender(message))}</span>
       <span>${escapeHtml(message.mailbox)}</span>
       ${code}
       ${message.hasAttachments ? '<span>有附件</span>' : ''}
       ${message.truncated ? '<span class="warning">仅头部</span>' : ''}
+      </div>
+    </summary>
+    <div class="message-content">
+      ${body}
     </div>
-    ${body}
-  </article>`;
+  </details>`;
 }
 
 export function renderPickupHtml(
@@ -94,14 +98,19 @@ export function renderPickupHtml(
     .sub { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:10px; color:var(--muted); font-size:13px; }
     .label { color:var(--soft); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
     .card { overflow:hidden; margin-top:14px; border:1px solid var(--rule); border-radius:6px; background:var(--raised); }
-    .message-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:16px 18px 4px; }
+    .message-summary { position:relative; display:block; cursor:pointer; padding:16px 72px 0 18px; list-style:none; }
+    .message-summary::-webkit-details-marker { display:none; }
+    .message-summary::after { position:absolute; top:17px; right:18px; color:var(--muted); content:'展开'; font-size:12px; }
+    .card[open] .message-summary::after { content:'收起'; }
+    .message-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
     h2 { margin:0; min-width:0; font-size:17px; overflow-wrap:anywhere; }
     time { flex:none; color:var(--muted); font:12px ui-monospace,SFMono-Regular,Menlo,monospace; }
-    .meta { display:flex; flex-wrap:wrap; align-items:center; gap:5px 12px; padding:0 18px 14px; color:var(--muted); font-size:12px; }
+    .meta { display:flex; flex-wrap:wrap; align-items:center; gap:5px 12px; padding:0 0 14px; color:var(--muted); font-size:12px; }
     .code { padding:1px 6px; border-radius:3px; background:var(--transit-soft); color:var(--transit); font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace; }
     .warning { color:var(--live); }
-    .mail-body { display:block; width:100%; min-height:220px; border:0; border-top:1px solid var(--rule-soft); background:#fff; }
-    .mail-text { margin:0; padding:18px; border-top:1px solid var(--rule-soft); white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--soft); }
+    .message-content { border-top:1px solid var(--rule-soft); }
+    .mail-body { display:block; width:100%; min-height:220px; border:0; background:#fff; }
+    .mail-text { margin:0; padding:18px; white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--soft); }
     .empty { padding:48px 20px; border:1px dashed var(--rule); border-radius:6px; color:var(--muted); text-align:center; background:var(--raised); }
     @media (max-width:600px) { main { width:min(100% - 20px, 920px); padding-top:24px; } .message-head { display:block; } time { display:block; margin-top:5px; } }
   </style>

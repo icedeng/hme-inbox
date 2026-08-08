@@ -65,6 +65,14 @@ const MAX_WAIT_SECONDS = 30;
 /** 长轮询的检查间隔。只查本地 SQLite，成本可忽略。 */
 const WAIT_POLL_MS = 200;
 
+/** HTML 浏览视图默认展示最近邮件列表；API 默认值仍由 parseParams 保持为 1。 */
+export function applyPickupViewDefaults(
+  params: PickupParams,
+  search: URLSearchParams,
+): PickupParams {
+  return params.format === 'html' && !search.has('n') ? { ...params, n: MAX_N } : params;
+}
+
 /** 支持 ISO8601 或 `5m` / `2h` / `1d` 这类相对写法。 */
 function parseSince(raw: string, now: Date): string | null {
   const relative = /^(\d+)\s*([smhd])$/i.exec(raw.trim());

@@ -1,6 +1,10 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { negotiatePickupFormat, parseParams } from '../src/lib/api/pickup.ts';
+import {
+  applyPickupViewDefaults,
+  negotiatePickupFormat,
+  parseParams,
+} from '../src/lib/api/pickup.ts';
 import { renderPickupHtml } from '../src/lib/api/pickupHtml.ts';
 import type { Alias } from '../src/lib/repositories/aliases.repo.ts';
 import type { MessageSummary } from '../src/lib/repositories/messages.repo.ts';
@@ -82,6 +86,24 @@ describe('公开取件 HTML', () => {
     );
   });
 
+  test('HTML 默认展示最近 50 封，但尊重显式 n 且不改变 JSON 默认值', () => {
+    const defaults = parseParams(new URLSearchParams());
+    assert.ok('params' in defaults);
+
+    assert.equal(
+      applyPickupViewDefaults({ ...defaults.params, format: 'html' }, new URLSearchParams()).n,
+      50,
+    );
+    assert.equal(
+      applyPickupViewDefaults(
+        { ...defaults.params, format: 'html', n: 3 },
+        new URLSearchParams('n=3'),
+      ).n,
+      3,
+    );
+    assert.equal(applyPickupViewDefaults(defaults.params, new URLSearchParams()).n, 1);
+  });
+
   test('转义不可信文本，并在 sandbox iframe 中渲染已清洗正文', () => {
     const output = renderPickupHtml(
       alias({ label: '<img src=x onerror=alert(1)>' }),
@@ -93,6 +115,8 @@ describe('公开取件 HTML', () => {
 
     assert.ok(output.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
     assert.ok(output.includes('&lt;img src=x onerror=alert(1)&gt;'));
+    assert.ok(output.includes('<details class="card">'));
+    assert.ok(!output.includes('<details class="card" open>'));
     assert.ok(output.includes('sandbox="allow-popups-to-escape-sandbox allow-scripts"'));
     assert.ok(!output.includes('allow-same-origin'));
     assert.ok(output.includes('hme-pickup-email-height'));
