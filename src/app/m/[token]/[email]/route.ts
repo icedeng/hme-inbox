@@ -10,6 +10,7 @@ import { getDb } from '../../../../lib/db/connection.ts';
 import { webEnv } from '../../../../lib/config/env.ts';
 import {
   parseParams,
+  negotiatePickupFormat,
   resolveAlias,
   fetchMessages,
   markMessagesRead,
@@ -20,6 +21,8 @@ import {
   type ListPayload,
 } from '../../../../lib/api/pickup.ts';
 import { CODE_CONFIDENCE_THRESHOLD } from '../../../../lib/email/verificationCode.ts';
+import { renderPickupHtml } from '../../../../lib/api/pickupHtml.ts';
+import * as messagesRepo from '../../../../lib/repositories/messages.repo.ts';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -28,6 +31,7 @@ const NO_STORE = {
   'Cache-Control': 'no-store, max-age=0',
   'X-Robots-Tag': 'noindex, nofollow, noarchive',
   'Referrer-Policy': 'no-referrer',
+  'X-Content-Type-Options': 'nosniff',
 };
 
 function errorResponse(status: number, code: string, message: string, field?: string): Response {
@@ -53,7 +57,8 @@ export async function GET(
   const userAgent = request.headers.get('user-agent');
   const prefix = tokenPrefix(token);
 
-  const parsed = parseParams(new URL(request.url).searchParams);
+  const search = new URL(request.url).searchParams;
+  const parsed = parseParams(search);
   if ('error' in parsed) {
     recordAccess(db, {
       aliasId: null,
@@ -67,7 +72,10 @@ export async function GET(
     });
     return errorResponse(400, 'invalid_parameter', parsed.error.message, parsed.error.field);
   }
-  const params = parsed.params;
+  const params = {
+    ...parsed.params,
+    format: negotiatePickupFormat(parsed.params.format, search, request.headers.get('accept')),
+  };
 
   const resolved = resolveAlias(db, token, email);
   if (!resolved.ok) {
@@ -141,6 +149,17 @@ export async function GET(
     return new Response(body, {
       status: 200,
       headers: { ...NO_STORE, 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+
+  if (params.format === 'html') {
+    const details = messages.map((summary) => ({
+      summary,
+      htmlBody: messagesRepo.getForAlias(db, alias.id, summary.id)?.htmlBody ?? null,
+    }));
+    return new Response(renderPickupHtml(alias, details), {
+      status: 200,
+      headers: { ...NO_STORE, 'Content-Type': 'text/html; charset=utf-8' },
     });
   }
 

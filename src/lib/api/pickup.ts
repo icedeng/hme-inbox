@@ -18,10 +18,41 @@ export interface PickupParams {
   n: number;
   since: string | null;
   unreadOnly: boolean;
-  format: 'json' | 'text' | 'code';
+  format: 'json' | 'text' | 'code' | 'html';
   markRead: boolean;
   waitSeconds: number;
   allowImages: boolean;
+}
+
+/**
+ * 未显式指定 format 时，用 Accept 做内容协商。
+ * 只有明确声明接受 text/html 才切到 UI；curl 的默认任意类型请求仍保持 JSON。
+ */
+export function negotiatePickupFormat(
+  parsedFormat: PickupParams['format'],
+  search: URLSearchParams,
+  accept: string | null,
+): PickupParams['format'] {
+  if (search.has('format') || parsedFormat !== 'json' || !accept) return parsedFormat;
+
+  const qualities = new Map<string, number>();
+  for (const part of accept.split(',')) {
+    const [mediaTypeRaw, ...parameters] = part.trim().split(';');
+    const mediaType = mediaTypeRaw?.trim().toLowerCase();
+    if (!mediaType) continue;
+    const qRaw = parameters
+      .map((parameter) => parameter.trim())
+      .find((parameter) => parameter.toLowerCase().startsWith('q='))
+      ?.slice(2);
+    const quality = qRaw === undefined ? 1 : Number(qRaw);
+    qualities.set(mediaType, Number.isFinite(quality) ? quality : 0);
+  }
+
+  const htmlQuality = qualities.get('text/html') ?? 0;
+  const jsonQuality = qualities.get('application/json');
+  return htmlQuality > 0 && (jsonQuality === undefined || htmlQuality > jsonQuality)
+    ? 'html'
+    : parsedFormat;
 }
 
 export interface ParamError {
@@ -73,8 +104,8 @@ export function parseParams(
   }
 
   const formatRaw = (search.get('format') ?? 'json').toLowerCase();
-  if (formatRaw !== 'json' && formatRaw !== 'text' && formatRaw !== 'code') {
-    return { error: { field: 'format', message: 'format 只能是 json、text 或 code' } };
+  if (formatRaw !== 'json' && formatRaw !== 'text' && formatRaw !== 'code' && formatRaw !== 'html') {
+    return { error: { field: 'format', message: 'format 只能是 json、text、code 或 html' } };
   }
 
   let waitSeconds = 0;

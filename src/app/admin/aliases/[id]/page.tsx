@@ -30,6 +30,8 @@ export default async function AliasDetailPage({ params }: { params: Promise<{ id
 
   const token = decryptToken(alias.tokenCiphertext, env.TOKEN_ENC_KEY);
   const url = buildPickupUrl(env.PUBLIC_BASE_URL, token, alias.email);
+  const jsonUrl = `${url}?format=json`;
+  const htmlUrl = `${url}?format=html`;
   const messages = messagesRepo.listByAlias(db, { aliasId, limit: 100 });
   const accessLog = miscRepo.listAccessLog(db, 5, aliasId);
 
@@ -59,7 +61,8 @@ export default async function AliasDetailPage({ params }: { params: Promise<{ id
           <h2 className="text-sm font-semibold tracking-wide text-ink-soft uppercase">取件 URL</h2>
           <div className="flex items-center gap-2">
             <CopyButton value={url} label="复制 URL" />
-            <CopyButton value={`${alias.email}----${url}`} label="复制 地址----URL" />
+            <CopyButton value={`${alias.email}----${jsonUrl}`} label="复制 JSON 地址----URL" />
+            <CopyButton value={`${alias.email}----${htmlUrl}`} label="复制 UI 地址----URL" />
             <form action={rotateTokenAction}>
               <input type="hidden" name="aliasId" value={alias.id} />
               <button
@@ -90,7 +93,8 @@ export default async function AliasDetailPage({ params }: { params: Promise<{ id
         <p className="mt-2 text-xs text-muted">
           GET 这个地址即可读到最新邮件。加 <code className="font-mono">?n=5</code> 取多封，
           <code className="font-mono">?wait=30</code> 等待新信最多 30 秒，
-          <code className="font-mono">?format=code</code> 只返回验证码本身。
+          <code className="font-mono">?format=code</code> 只返回验证码本身，
+          <code className="font-mono">?format=html</code> 打开无顶部导航的收件 UI。
           {alias.tokenRotatedAt && ` 上次轮换于 ${formatTime(alias.tokenRotatedAt)}。`}
         </p>
       </section>

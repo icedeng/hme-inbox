@@ -106,13 +106,17 @@ GET /{token}/{email}/{messageId}/attachments/{id}       附件下载
 | `n` | 1 | 取最新 n 封，1–50 |
 | `since` | — | ISO8601 时间，或 `5m` / `2h` / `1d` |
 | `unread` | 0 | 只返回未读 |
-| `format` | `json` | `json` / `text` / `code` |
+| `format` | `json` | `json` / `text` / `code` / `html` |
 | `mark_read` | 1 | 是否把本次返回的标记为已读 |
 | `wait` | 0 | 无新信时最多等 N 秒（0–30），长轮询 |
 | `images` | 0 | 详情接口是否放行 HTML 里的远程图片 |
 
 `format=code` 返回裸验证码纯文本，专为 shell 服务；提取置信度不达标时返回 404 空体，
 **不会给一个可疑的值** —— 拿着错码反复重试比拿不到码难排查得多。
+
+`format=html` 返回不带管理后台顶部导航的收件 UI，适合把取件地址直接交给第三方打开；
+浏览器直接打开时也会通过 `Accept: text/html` 自动返回该 UI。程序请求及默认
+`format=json` 保持不变，显式 `?format=` 始终优先。
 
 错误响应：token 无效与 URL 里 email 段不匹配返回**相同的 404**（防枚举）；
 别名被停用返回 403；参数非法返回 400；没有符合条件的邮件返回
