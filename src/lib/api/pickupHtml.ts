@@ -9,6 +9,10 @@ import { sanitizeEmailHtml, EMAIL_IFRAME_SANDBOX } from '../email/sanitizeHtml.t
 import type { Alias } from '../repositories/aliases.repo.ts';
 import type { MessageSummary } from '../repositories/messages.repo.ts';
 
+const PICKUP_RESIZE_MESSAGE = 'hme-pickup-email-height';
+/** 只允许执行页面自己注入的高度上报脚本，仍然不授予同源权限。 */
+const PICKUP_IFRAME_SANDBOX = `${EMAIL_IFRAME_SANDBOX} allow-scripts`;
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {
     switch (character) {
@@ -33,12 +37,17 @@ function sender(message: MessageSummary): string {
   return message.fromName ?? message.fromAddress ?? '未知发件人';
 }
 
+function renderIframeDocument(htmlBody: string): string {
+  const sanitized = sanitizeEmailHtml(htmlBody);
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;overflow:hidden}body{min-width:0}</style></head><body>${sanitized}<script>(()=>{const send=()=>{const root=document.documentElement;const body=document.body;parent.postMessage({type:'${PICKUP_RESIZE_MESSAGE}',height:Math.max(root.scrollHeight,root.offsetHeight,body?.scrollHeight??0,body?.offsetHeight??0)},'*')};addEventListener('load',send);new ResizeObserver(send).observe(document.documentElement);requestAnimationFrame(send)})()</script></body></html>`;
+}
+
 function renderMessage(message: MessageSummary, htmlBody: string | null): string {
   const subject = escapeHtml(message.subject || '（无主题）');
   const body = htmlBody
-    ? `<iframe class="mail-body" sandbox="${EMAIL_IFRAME_SANDBOX}" srcdoc="${escapeHtml(
-        sanitizeEmailHtml(htmlBody),
-      )}" title="邮件正文" loading="lazy"></iframe>`
+    ? `<iframe class="mail-body" sandbox="${PICKUP_IFRAME_SANDBOX}" srcdoc="${escapeHtml(
+        renderIframeDocument(htmlBody),
+      )}" title="邮件正文" loading="lazy" scrolling="no"></iframe>`
     : `<pre class="mail-text">${escapeHtml(message.textBody ?? message.snippet ?? '（无正文）')}</pre>`;
   const code = message.verificationCode
     ? `<span class="code">${escapeHtml(message.verificationCode)}</span>`
@@ -106,6 +115,16 @@ export function renderPickupHtml(
     </header>
     ${messageMarkup}
   </main>
+  <script>
+    addEventListener('message', (event) => {
+      if (event.data?.type !== '${PICKUP_RESIZE_MESSAGE}') return;
+      const frame = Array.from(document.querySelectorAll('iframe.mail-body'))
+        .find((candidate) => candidate.contentWindow === event.source);
+      const height = Number(event.data.height);
+      if (!frame || !Number.isFinite(height) || height <= 0) return;
+      frame.style.height = Math.min(Math.ceil(height), 30000) + 'px';
+    });
+  </script>
 </body>
 </html>`;
 }

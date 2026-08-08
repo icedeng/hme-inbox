@@ -93,7 +93,10 @@ describe('公开取件 HTML', () => {
 
     assert.ok(output.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
     assert.ok(output.includes('&lt;img src=x onerror=alert(1)&gt;'));
-    assert.ok(output.includes('sandbox="allow-popups-to-escape-sandbox"'));
+    assert.ok(output.includes('sandbox="allow-popups-to-escape-sandbox allow-scripts"'));
+    assert.ok(!output.includes('allow-same-origin'));
+    assert.ok(output.includes('hme-pickup-email-height'));
+    assert.ok(output.includes("frame.style.height = Math.min(Math.ceil(height), 30000) + 'px'"));
     assert.ok(output.includes('&lt;p&gt;安全正文&lt;/p&gt;'));
     assert.ok(!output.includes('<script>alert(1)</script>'));
   });
