@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { requireAdminPage } from '../../../../../../lib/auth/adminPage.ts';
 import { getDb } from '../../../../../../lib/db/connection.ts';
 import { webEnv } from '../../../../../../lib/config/env.ts';
 import { withWriteTx } from '../../../../../../lib/db/driver.ts';
@@ -28,6 +29,7 @@ export default async function MessagePage({
   params: Promise<{ id: string; messageId: string }>;
   searchParams: Promise<{ images?: string }>;
 }) {
+  await requireAdminPage();
   const { id, messageId } = await params;
   const query = await searchParams;
   const aliasId = Number(id);

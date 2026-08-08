@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireAdminPage } from '../../../lib/auth/adminPage.ts';
 import { getDb } from '../../../lib/db/connection.ts';
 import { webEnv } from '../../../lib/config/env.ts';
 import { decryptToken, buildPickupUrl } from '../../../lib/tokens/token.ts';
@@ -54,6 +55,7 @@ export default async function AliasesPage({
 }: {
   searchParams: Promise<AliasSearchParams>;
 }) {
+  await requireAdminPage();
   const params = await searchParams;
   const db = getDb();
   const env = webEnv();

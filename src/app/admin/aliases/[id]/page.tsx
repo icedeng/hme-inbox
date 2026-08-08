@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { requireAdminPage } from '../../../../lib/auth/adminPage.ts';
 import { getDb } from '../../../../lib/db/connection.ts';
 import { webEnv } from '../../../../lib/config/env.ts';
 import { decryptToken, buildPickupUrl } from '../../../../lib/tokens/token.ts';
@@ -17,6 +18,7 @@ function formatTime(iso: string): string {
 }
 
 export default async function AliasDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   const aliasId = Number(id);
   if (!Number.isInteger(aliasId)) notFound();

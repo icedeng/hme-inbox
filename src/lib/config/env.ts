@@ -30,6 +30,16 @@ const OptionalHttpUrl = OptionalNonEmpty.refine(
   { message: '必须是 http 或 https URL' },
 );
 
+const BoolFromEnv = z.preprocess(
+  (value) => {
+    if (value === undefined || value === '') return false;
+    if (value === true || value === 'true' || value === '1') return true;
+    if (value === false || value === 'false' || value === '0') return false;
+    return value;
+  },
+  z.boolean(),
+);
+
 /** 32 字节的 base64/base64url 密钥。 */
 const Key32 = NonEmpty.refine(
   (v) => {
@@ -128,6 +138,8 @@ const WebSchema = z.object({
   SESSION_SECRET: Key32,
   PUBLIC_BASE_URL: NonEmpty.transform((v) => v.replace(/\/+$/, '')),
   SESSION_TTL_HOURS: IntFromEnv(72, 1, 8760),
+  /** 只有 Web 位于可信反向代理之后时才启用转发 IP。 */
+  TRUST_PROXY_HEADERS: BoolFromEnv,
   /** Chrome 扩展推送别名使用；空值表示禁用写入 API。 */
   HME_PUSH_TOKEN: z.preprocess(
     (value) => (typeof value === 'string' && !value.trim() ? undefined : value),

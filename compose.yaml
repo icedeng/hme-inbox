@@ -46,6 +46,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?必须设置，用 openssl rand -base64 32 生成}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?必须设置，例如 https://api.example.com}
       SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-72}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
       HME_PUSH_TOKEN: ${HME_PUSH_TOKEN:-}
       TURB_GPT_BASE_URL: ${TURB_GPT_BASE_URL:-}
       TURB_GPT_AUTH_CODE: ${TURB_GPT_AUTH_CODE:-}

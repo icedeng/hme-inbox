@@ -1,3 +1,4 @@
+import { requireAdminPage } from '../../../lib/auth/adminPage.ts';
 import { getDb } from '../../../lib/db/connection.ts';
 import { ImportForm } from './ImportForm.tsx';
 import * as miscRepo from '../../../lib/repositories/misc.repo.ts';
@@ -9,6 +10,7 @@ function formatTime(iso: string): string {
 }
 
 export default async function ImportPage() {
+  await requireAdminPage();
   const batches = miscRepo.listImportBatches(getDb(), 10);
 
   return (

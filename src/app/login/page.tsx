@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { webEnv } from '../../lib/config/env.ts';
-import { verifyPassword, isRateLimited, recordFailure, clearFailures } from '../../lib/auth/password.ts';
+import { verifyPassword } from '../../lib/auth/password.ts';
 import { startSession, cookieOptions, SESSION_COOKIE, requireSession } from '../../lib/auth/session.ts';
+import { loginRateLimit } from '../../lib/auth/loginRateLimit.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,20 +13,21 @@ async function login(formData: FormData): Promise<void> {
   const password = String(formData.get('password') ?? '');
   const next = String(formData.get('next') ?? '/admin');
   const headerList = await headers();
-  const ip = headerList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
+  const env = webEnv();
+  const trustProxy = env.TRUST_PROXY_HEADERS;
+  const clientIp = loginRateLimit.clientIp(headerList, trustProxy);
 
-  if (isRateLimited(ip)) {
+  if (loginRateLimit.isLimited(headerList, trustProxy)) {
     redirect('/login?error=rate_limited');
   }
 
-  const env = webEnv();
   if (!verifyPassword(password, env.ADMIN_PASSWORD_HASH)) {
-    recordFailure(ip);
+    loginRateLimit.recordFailure(headerList, trustProxy);
     redirect('/login?error=bad_password');
   }
 
-  clearFailures(ip);
-  const session = startSession({ userAgent: headerList.get('user-agent'), ip });
+  loginRateLimit.clear(headerList, trustProxy);
+  const session = startSession({ userAgent: headerList.get('user-agent'), ip: clientIp });
   const store = await cookies();
   store.set(SESSION_COOKIE, session.id, cookieOptions(session.expiresAt));
 

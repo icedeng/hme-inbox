@@ -4,9 +4,6 @@ import {
   hashPassword,
   verifyPassword,
   isValidPasswordHash,
-  isRateLimited,
-  recordFailure,
-  clearFailures,
 } from '../src/lib/auth/password.ts';
 import {
   generateToken,
@@ -65,25 +62,6 @@ describe('管理员密码', () => {
     }
   });
 
-  test('登录失败限速在窗口内生效', () => {
-    const key = 'test-ip-1';
-    clearFailures(key);
-    for (let i = 0; i < 4; i++) recordFailure(key);
-    assert.equal(isRateLimited(key), false, '4 次还不该锁');
-    recordFailure(key);
-    assert.equal(isRateLimited(key), true, '第 5 次应锁住');
-    clearFailures(key);
-    assert.equal(isRateLimited(key), false);
-  });
-
-  test('限速窗口过期后自动解锁', () => {
-    const key = 'test-ip-2';
-    const t0 = 1_000_000;
-    clearFailures(key);
-    for (let i = 0; i < 5; i++) recordFailure(key, t0);
-    assert.equal(isRateLimited(key, t0), true);
-    assert.equal(isRateLimited(key, t0 + 6 * 60_000), false, '5 分钟窗口后应解锁');
-  });
 });
 
 describe('取件 token', () => {

@@ -62,34 +62,3 @@ export function verifyPassword(password: string, stored: string): boolean {
   if (derived.length !== expected.length) return false;
   return timingSafeEqual(derived, expected);
 }
-
-/**
- * 登录失败限速。管理员只有一个，用进程内 Map 就够 ——
- * 不必为此引入 Redis，重启后计数清零也无所谓（爆破者拿不到那个窗口）。
- */
-const attempts = new Map<string, { count: number; firstAt: number }>();
-const WINDOW_MS = 5 * 60_000;
-const MAX_ATTEMPTS = 5;
-
-export function isRateLimited(key: string, now: number = Date.now()): boolean {
-  const rec = attempts.get(key);
-  if (!rec) return false;
-  if (now - rec.firstAt > WINDOW_MS) {
-    attempts.delete(key);
-    return false;
-  }
-  return rec.count >= MAX_ATTEMPTS;
-}
-
-export function recordFailure(key: string, now: number = Date.now()): void {
-  const rec = attempts.get(key);
-  if (!rec || now - rec.firstAt > WINDOW_MS) {
-    attempts.set(key, { count: 1, firstAt: now });
-    return;
-  }
-  rec.count++;
-}
-
-export function clearFailures(key: string): void {
-  attempts.delete(key);
-}

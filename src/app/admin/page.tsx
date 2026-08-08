@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireAdminPage } from '../../lib/auth/adminPage.ts';
 import { getDb } from '../../lib/db/connection.ts';
 import { AddressSpecimen } from '../../components/AddressSpecimen.tsx';
 import { requestReconnectAction } from './actions.ts';
@@ -28,6 +29,7 @@ function relative(iso: string | null): string {
 }
 
 export default async function DashboardPage() {
+  await requireAdminPage();
   const db = getDb();
 
   const totalAliases = aliasesRepo.countAliases(db);

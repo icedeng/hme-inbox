@@ -1,3 +1,4 @@
+import { requireAdminPage } from '../../../lib/auth/adminPage.ts';
 import { getDb } from '../../../lib/db/connection.ts';
 import * as unmatchedRepo from '../../../lib/repositories/unmatched.repo.ts';
 import * as messagesRepo from '../../../lib/repositories/messages.repo.ts';
@@ -24,6 +25,7 @@ function formatTime(iso: string): string {
 }
 
 export default async function UnmatchedPage() {
+  await requireAdminPage();
   const db = getDb();
   const pending = unmatchedRepo.listPending(db, 100);
   const topHeaders = unmatchedRepo.topHeaderNames(db, 25);
